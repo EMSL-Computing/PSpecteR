@@ -1,0 +1,23 @@
+---
+title: "HTML_Export"
+output: html_document
+params:
+  htmlTitles: NA
+  htmlFigs: NA
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(plotly)
+```
+
+## Figure Titles
+
+`r paste(params$htmlTitles, collapse = "</br>")`
+
+
+## Display All Generated PTM Spectra
+
+```{r, echo = F, warning = F, error = F, message = F}
+suppressWarnings(htmltools::tagList(params$htmlFigs))
+```

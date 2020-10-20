@@ -1,0 +1,63 @@
+## David Degnan, Pacific Northwest National Labs
+## Last Updated: 2020_10_20
+
+
+# Install R Version 3.6.1, installs randomly installed containers for hashing
+FROM rocker/shiny:3.6.1
+
+# Install Ubuntu Dependencies
+RUN apt-get update && apt-get install -y \
+    sudo \
+    pandoc \
+    pandoc-citeproc \
+    libcurl4-gnutls-dev \
+    libcairo2-dev \
+    libxt-dev \ 
+    libssl-dev \
+    libssh2-1-dev \
+    libxml2-dev \ 
+    libnetcdf-dev \
+    libnetcdff-dev
+
+# Install packages from package install script 
+COPY Install_Packages_Linux.R /srv/shiny/
+WORKDIR /srv/shiny/
+RUN Rscript "Install_Packages_Linux.R" 
+
+# Install rawDiag separately
+RUN Rscript -e "install.packages('http://fgcz-ms.uzh.ch/~cpanse/rawDiag_0.0.34.tar.gz', repo = NULL)"
+
+# Install reshape2 separately
+RUN Rscript -e "install.packages('https://cran.r-project.org/src/contrib/Archive/reshape2/reshape2_1.4.3.tar.gz')"
+
+# Add phantom JS dependencies and mono
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    chrpath \
+    libxft-dev \ 
+    libfreetype6-dev \ 
+    libfreetype6 \ 
+    libfontconfig1-dev \
+    libfontconfig1 \
+    mono-devel
+
+RUN wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2
+RUN tar xvjf phantomjs-2.1.1-linux-x86_64.tar.bz2 -C /usr/local/share/
+RUN ln -s /usr/local/share/phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local/bin/
+
+# Copy configuration files into the Docker image
+WORKDIR ../../
+COPY app.R /srv/shiny-server/
+COPY Glossary /srv/shiny-server/Glossary
+COPY Licenses /srv/shiny-server/Licenses
+COPY Server /srv/shiny-server/Server
+COPY www /srv/shiny-server/www
+COPY data /data
+
+# Make the ShinyApp available at port 3838
+EXPOSE 3838
+
+# Allow permission
+RUN sudo chown -R shiny:shiny /srv/shiny-server /data
+
+CMD ["/usr/bin/shiny-server.sh"]

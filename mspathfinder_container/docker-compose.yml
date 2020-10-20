@@ -1,0 +1,27 @@
+# This relies on environment variable PSPECTER_DATA pointing to the directory of data to share 
+# with the containers. Run like this:
+# PSPECTER_DATA=[insert path here] && docker-compose up
+
+version: "3" 
+services:
+    pspecter1:
+        image: pspecter:1.0.0
+        container_name: pspecter1
+        volumes:
+            - "${PSPECTER_DATA}:/data:z"
+            - "../pspecter_container/Server:/srv/shiny-server/Server:z"
+        ports:
+            - "3838:3838"
+        depends_on:
+            - mspathfindert1
+        links:
+            - mspathfindert1
+    mspathfindert1:
+        build:
+            context: .
+        image: mspathfindert:1.0
+        container_name: mspathfindert1
+        volumes:
+            - "${PSPECTER_DATA}:/data:z"
+        ports:
+            - "5000:5000"

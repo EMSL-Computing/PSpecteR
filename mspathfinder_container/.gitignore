@@ -1,0 +1,6 @@
+**/__pycache__/
+.idea/
+MspfPyServer/venv/
+*.DS_Store
+*.rdb
+MSPathFinder_Mods.txt
