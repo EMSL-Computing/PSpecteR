@@ -4,11 +4,11 @@ This Docker container runs PSpecteR, a Shiny web application for tandem LC-MS pr
 
 To run the PSpecteR docker container and its two companion docker containers, build each container *within the container directory*: 
 
-`docker build -t pspecter:latest .`
+`docker build -t pspecter:1.0.0 .`
 
-`docker build -t msgf:latest .`
+`docker build -t msgf:1.0 .`
 
-`docker build -t mspathfindert:latest .`
+`docker build -t mspathfindert:1.0 .`
 
 Then define the shared folder between the containers and use the docker compose file in the pspecter_container repo: 
 
