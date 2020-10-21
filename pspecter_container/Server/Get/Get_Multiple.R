@@ -46,6 +46,7 @@ list(
                       "Score", "Q.Value", "isDecoy", "Description", "Start")
     scan <- scan[!is.na(scan$Scan.Num),]
     scan$Sequence <- as.character(scan$Sequence)
+    
     return(scan)
     
   }),

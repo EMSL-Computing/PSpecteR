@@ -23,7 +23,7 @@ list(
   ParamsMSGFpath <- reactiveVal(file.path("/data", "data", "TestFiles", "MSGF_Parameters.txt")),
   
   # Create UI for uploading a parameters file
-  shinyFileChoose(input, "BUParamFile", roots = uploadFolder, filetypes = c("txt")),
+  shinyFileChoose(input, "BUParamFile", roots = uploadFolder, defaultPath = "/data/data", filetypes = c("txt")),
   
   # Add observer to change reactive variable
   observeEvent(input$BUParamFile, {

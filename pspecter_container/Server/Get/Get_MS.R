@@ -89,7 +89,7 @@ list(
       if (is.null(mzms)) {return(NULL)}
       
       # The mzR package reads entry number and not scan
-      entryNum <- match(scanNum, getScan()$Scan.Num[order(getScan()$Scan.Num)])
+      entryNum <- match(scanNum, unique(getScan()$Scan.Num[order(getScan()$Scan.Num)]))
       peak <- data.frame(peaks(mzms, scan = entryNum))
       
     } else
@@ -106,6 +106,12 @@ list(
     if (getFileType() == "h5") {
       peak <- data.frame(h5read(msPath(), paste("Spectra_mz_arrays/", scanNum, sep = "")),
                          h5read(msPath(), paste("Spectra_intensity_arrays/", scanNum, sep = "")))
+    }
+    
+    # Return null if no peaks
+    if (is.null(peak) || nrow(peak) < 1) {
+      sendSweetAlert(session, "No Peaks Reported", type = "error")
+      return(NULL)
     }
     
     # Apply the intensity minimum filter

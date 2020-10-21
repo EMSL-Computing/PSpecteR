@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_10_08
+## Last Updated: 2020_10_21
 
 # DESCRIPTION: Contains the functions necessary to upload files to PSpecteR
 
@@ -22,7 +22,7 @@ list(
   msPath <- reactiveVal(NULL),
   
   # Specify the shiny file choose box
-  shinyFileChoose(input, 'mzmsFile', roots = uploadFolder,
+  shinyFileChoose(input, 'mzmsFile', roots = uploadFolder, defaultPath = "/data/data",
                   filetypes = c("mzML", "mzXML", "raw", "h5")),
   
   # When the choose button is clicked, here is the volume it will open up to and what information will be given to msPath
@@ -92,7 +92,7 @@ list(
   idPath <- reactiveVal(value = NULL),
   
   # Specify the shiny file choose box
-  shinyFileChoose(input, 'idFile', roots = uploadFolder,
+  shinyFileChoose(input, 'idFile', roots = uploadFolder, defaultPath = "/data/data",
                   filetypes = c("mzid", "mzID")),
   
   # When choose button is clicked, determine what information is passed to idPath
@@ -144,7 +144,7 @@ list(
   fastaPath <- reactiveVal(value = NULL),
   
   # Specify the shiny file choose box
-  shinyFileChoose(input, 'fastaFile', roots = uploadFolder, 
+  shinyFileChoose(input, 'fastaFile', roots = uploadFolder, defaultPath = "/data/data", 
                   filetypes = c("fa", "FA", "fasta", "FASTA")),
   
   # When choose button is clicked, determine which information is passed to fastaPath

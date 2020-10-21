@@ -205,7 +205,7 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
          
          # Most Abundant Isotope switch, Trace switch, and Pre MZ range
          numericInput("MPpercdiff", "Percent Error", 25),
-         numericInput("MPwinsize", "Increase Window (m/z)", 0),
+         numericInput("MPwinsize", "Increase Window (m/z)", 5),
          actionButton("MPlargePre", "MS1 Full Screen"),
          actionButton("MPlargeNext", "Next MS1 Full Screen")),
        

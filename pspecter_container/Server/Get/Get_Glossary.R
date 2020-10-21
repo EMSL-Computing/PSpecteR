@@ -10,7 +10,7 @@ list(
   roots <- c(wd = Sys.getenv("HOME")),
   
   # Allow user to choose added data
-  shinyFileChoose(input, "glCSVadd", roots = roots, filetypes = c("csv")),
+  shinyFileChoose(input, "glCSVadd", roots = roots, defaultPath = "/data/data", filetypes = c("csv")),
   
   # Extract modification data from the optional file
   getAddedDataFile <- reactive({

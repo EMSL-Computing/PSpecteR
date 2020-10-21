@@ -36,7 +36,7 @@ list(
   ################
   
   # Specify the shiny file choose box
-  shinyFileChoose(input, 'ms1ftFile', roots = uploadFolder, 
+  shinyFileChoose(input, 'ms1ftFile', roots = uploadFolder, defaultPath = "/data/data", 
                   filetypes = c("ms1ft", "MS1FT")),
   
   # When the choose button is clicked, here is the volume it will open up to and what information will be given to ms1ftPath

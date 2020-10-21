@@ -22,7 +22,7 @@ list(
   ModsMSPFpath <- reactiveVal(file.path("/data", "data", "TestFiles", "MSPathFinder_Mods.txt")),
   
   # Create UI for uploading a modifications file
-  shinyFileChoose(input, "TDModFile", roots = uploadFolder, filetypes = c("txt")),
+  shinyFileChoose(input, "TDModFile", roots = uploadFolder, defaultPath = "/data/data", filetypes = c("txt")),
   
   # Add observer to change reactive variable
   observeEvent(input$TDModFile, {
