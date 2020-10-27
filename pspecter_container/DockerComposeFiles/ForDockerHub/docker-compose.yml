@@ -5,8 +5,8 @@
 version: "3" 
 services:
     pspecter1: 
-        image: pspecter:1.0.0
-        container_name: emslcomputing/pspecter1
+        image: emslcomputing/pspecter:1.0.0
+        container_name: pspecter1
         volumes:
             - "${PSPECTER_DATA}:/data"
         ports:
@@ -18,8 +18,8 @@ services:
             - mspathfindert1
             - msgf1
     mspathfindert1:
-        image: mspathfindert:1.0
-        container_name: emslcomputing/mspathfindert1
+        image: emslcomputing/mspathfindert:1.0
+        container_name: mspathfindert1
         environment:
             - REDIS_PORT=6380
             - GUNICORN_PORT=5001
@@ -28,8 +28,8 @@ services:
         ports:
             - "5001:5001"
     msgf1:
-        image: msgf:1.0
-        container_name: emslcomputing/msgf1
+        image: emslcomputing/msgf:1.0
+        container_name: msgf1
         environment:
             - REDIS_PORT=6379
             - GUNICORN_PORT=5000
