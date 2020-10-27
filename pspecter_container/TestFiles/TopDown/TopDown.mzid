@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MzIdentML xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="MSPathFinder_Amanda" name="MSPathFinder_Amanda" xsi:schemaLocation="http://psidev.info/psi/pi/mzIdentML/1.1 http://www.psidev.info/files/mzIdentML1.1.0.xsd" creationDate="2020-08-14T11:43:55.9286975-07:00" version="1.1.0" xmlns="http://psidev.info/psi/pi/mzIdentML/1.1">
+  <cvList>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.21" uri="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo" />
+    <cv id="PEFF" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.21" uri="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo" />
+    <cv id="UNIMOD" fullName="UNIMOD" version="2018:10:25 09:32" uri="http://www.unimod.org/obo/unimod.obo" />
+    <cv id="UO" fullName="Unit Ontology" version="releases/2018-03-24" uri="http://ontologies.berkeleybop.org/uo.obo" />
+  </cvList>
+  <AnalysisSoftwareList>
+    <AnalysisSoftware id="Software_1" name="MSPathFinder" version="1.0.7017.22542">
+      <SoftwareName>
+        <cvParam cvRef="MS" accession="MS:1002720" name="MSPathFinder" />
+      </SoftwareName>
+    </AnalysisSoftware>
+  </AnalysisSoftwareList>
+  <SequenceCollection>
+    <DBSequence id="DBSeq1" accession="SO_0239" searchDatabase_ref="SearchDB_1" length="64">
+      <cvParam cvRef="MS" accession="MS:1001088" name="protein description" value="ribosomal protein L29, RpmC" />
+    </DBSequence>
+    <Peptide id="Pep_1">
+      <PeptideSequence>MKASELREKSVEELNAELLGLLREQFNLRMQHATGQLTQTH</PeptideSequence>
+    </Peptide>
+    <PeptideEvidence id="PepEv_1_1_1" pre="-" post="Q" start="1" end="41" peptide_ref="Pep_1" dBSequence_ref="DBSeq1" />
+  </SequenceCollection>
+  <AnalysisCollection>
+    <SpectrumIdentification id="SpecIdent_1" spectrumIdentificationProtocol_ref="SearchProtocol_1" spectrumIdentificationList_ref="SI_LIST_1">
+      <InputSpectra spectraData_ref="SD_1" />
+      <SearchDatabaseRef searchDatabase_ref="SearchDB_1" />
+    </SpectrumIdentification>
+  </AnalysisCollection>
+  <AnalysisProtocolCollection>
+    <SpectrumIdentificationProtocol id="SearchProtocol_1" name="Settings_1" analysisSoftware_ref="Software_1">
+      <SearchType>
+        <cvParam cvRef="MS" accession="MS:1001083" name="ms-ms search" />
+      </SearchType>
+      <AdditionalSearchParams>
+        <cvParam cvRef="MS" accession="MS:1001211" name="parent mass type mono" />
+        <cvParam cvRef="MS" accession="MS:1001256" name="fragment mass type mono" />
+        <userParam name="TargetDecoyApproach" value="False" />
+        <userParam name="MinSequenceLength" value="21" />
+        <userParam name="MaxSequenceLength" value="300" />
+        <userParam name="MaxNumNTermCleavages" value="1" />
+        <userParam name="MaxNumCTermCleavages" value="0" />
+        <userParam name="MinPrecursorIonCharge" value="2" />
+        <userParam name="MaxPrecursorIonCharge" value="20" />
+        <userParam name="MinProductIonCharge" value="1" />
+        <userParam name="MaxProductIonCharge" value="10" />
+        <userParam name="MinSequenceMass" value="3000" />
+        <userParam name="MaxSequenceMass" value="5000" />
+        <userParam name="PrecursorIonTolerance" value="10Ppm" />
+        <userParam name="ProductIonTolerance" value="10Ppm" />
+        <userParam name="SearchMode" value="SingleInternalCleavage" />
+        <userParam name="NumMatchesPerSpectrum" value="3" />
+        <userParam name="TagBasedSearch" value="True" />
+        <userParam name="SpecifiedActivationMethod" value="Determined By Spectrum (Unknown)" />
+        <userParam name="SearchType" value="Target" />
+      </AdditionalSearchParams>
+      <ModificationParams>
+        <SearchModification fixedMod="false" massDelta="15.994915" residues="M">
+          <cvParam cvRef="UNIMOD" accession="UNIMOD:35" name="Oxidation" />
+        </SearchModification>
+        <SearchModification fixedMod="false" massDelta="-1.007825" residues="C">
+          <cvParam cvRef="UNIMOD" accession="UNIMOD:374" name="Dehydro" />
+        </SearchModification>
+        <SearchModification fixedMod="false" massDelta="42.0105629" residues=".">
+          <SpecificityRules>
+            <cvParam cvRef="MS" accession="MS:1002057" name="modification specificity protein N-term" />
+          </SpecificityRules>
+          <cvParam cvRef="UNIMOD" accession="UNIMOD:1" name="Acetyl" />
+        </SearchModification>
+      </ModificationParams>
+      <FragmentTolerance>
+        <cvParam cvRef="MS" accession="MS:1001412" name="search tolerance plus value" value="10" unitCvRef="UO" unitAccession="UO:0000169" unitName="parts per million" />
+        <cvParam cvRef="MS" accession="MS:1001413" name="search tolerance minus value" value="10" unitCvRef="UO" unitAccession="UO:0000169" unitName="parts per million" />
+      </FragmentTolerance>
+      <ParentTolerance>
+        <cvParam cvRef="MS" accession="MS:1001412" name="search tolerance plus value" value="10" unitCvRef="UO" unitAccession="UO:0000169" unitName="parts per million" />
+        <cvParam cvRef="MS" accession="MS:1001413" name="search tolerance minus value" value="10" unitCvRef="UO" unitAccession="UO:0000169" unitName="parts per million" />
+      </ParentTolerance>
+      <Threshold>
+        <cvParam cvRef="MS" accession="MS:1001494" name="no threshold" />
+      </Threshold>
+    </SpectrumIdentificationProtocol>
+  </AnalysisProtocolCollection>
+  <DataCollection>
+    <Inputs>
+      <SearchDatabase id="SearchDB_1" name="Amanda" location="Amanda.fasta" numDatabaseSequences="317">
+        <FileFormat>
+          <cvParam cvRef="MS" accession="MS:1001348" name="FASTA format" />
+        </FileFormat>
+        <DatabaseName>
+          <userParam name="Amanda" />
+        </DatabaseName>
+      </SearchDatabase>
+      <SpectraData id="SD_1" name="Amanda" location=".\Amanda.mzML">
+        <FileFormat>
+          <cvParam cvRef="MS" accession="MS:1000563" name="Thermo RAW format" />
+        </FileFormat>
+        <SpectrumIDFormat>
+          <cvParam cvRef="MS" accession="MS:1000768" name="Thermo nativeID format" />
+        </SpectrumIDFormat>
+      </SpectraData>
+    </Inputs>
+    <AnalysisData>
+      <SpectrumIdentificationList id="SI_LIST_1" numSequencesSearched="1">
+        <SpectrumIdentificationResult id="SIR_5707" spectrumID="controllerType=0 controllerNumber=1 scan=5707" spectraData_ref="SD_1">
+          <SpectrumIdentificationItem id="SIR_5707_1" chargeState="5" experimentalMassToCharge="951.09842685799993" calculatedMassToCharge="950.697084926" peptide_ref="Pep_1" rank="1" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="PepEv_1_1_1" />
+            <cvParam cvRef="MS" accession="MS:1000864" name="chemical compound formula" value="C(203) H(338) N(62) O(65) S(2)" />
+            <cvParam cvRef="MS" accession="MS:1002725" name="MSPathFinder:RawScore" value="1" />
+            <cvParam cvRef="MS" accession="MS:1002721" name="MSPathFinder:SpecEValue" value="4.108686983032E-37" />
+            <cvParam cvRef="MS" accession="MS:1002722" name="MSPathFinder:EValue" value="1.30245377362114E-34" />
+          </SpectrumIdentificationItem>
+          <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="54.203309075183" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute" />
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_5709" spectrumID="controllerType=0 controllerNumber=1 scan=5709" spectraData_ref="SD_1">
+          <SpectrumIdentificationItem id="SIR_5709_1" chargeState="5" experimentalMassToCharge="951.09842685799993" calculatedMassToCharge="950.697084926" peptide_ref="Pep_1" rank="1" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="PepEv_1_1_1" />
+            <cvParam cvRef="MS" accession="MS:1000864" name="chemical compound formula" value="C(203) H(338) N(62) O(65) S(2)" />
+            <cvParam cvRef="MS" accession="MS:1002725" name="MSPathFinder:RawScore" value="1" />
+            <cvParam cvRef="MS" accession="MS:1002721" name="MSPathFinder:SpecEValue" value="3.822033198041E-37" />
+            <cvParam cvRef="MS" accession="MS:1002722" name="MSPathFinder:EValue" value="1.211584523779E-34" />
+          </SpectrumIdentificationItem>
+          <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="54.215651772783" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute" />
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_5714" spectrumID="controllerType=0 controllerNumber=1 scan=5714" spectraData_ref="SD_1">
+          <SpectrumIdentificationItem id="SIR_5714_1" chargeState="5" experimentalMassToCharge="951.09842685799993" calculatedMassToCharge="950.697084926" peptide_ref="Pep_1" rank="1" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="PepEv_1_1_1" />
+            <cvParam cvRef="MS" accession="MS:1000864" name="chemical compound formula" value="C(203) H(338) N(62) O(65) S(2)" />
+            <cvParam cvRef="MS" accession="MS:1002725" name="MSPathFinder:RawScore" value="0.999999999999929" />
+            <cvParam cvRef="MS" accession="MS:1002721" name="MSPathFinder:SpecEValue" value="6.00041315255051E-27" />
+            <cvParam cvRef="MS" accession="MS:1002722" name="MSPathFinder:EValue" value="1.90213096935851E-24" />
+          </SpectrumIdentificationItem>
+          <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="54.263099582917" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute" />
+        </SpectrumIdentificationResult>
+        <SpectrumIdentificationResult id="SIR_5716" spectrumID="controllerType=0 controllerNumber=1 scan=5716" spectraData_ref="SD_1">
+          <SpectrumIdentificationItem id="SIR_5716_1" chargeState="5" experimentalMassToCharge="951.09842685799993" calculatedMassToCharge="950.697084926" peptide_ref="Pep_1" rank="1" passThreshold="true">
+            <PeptideEvidenceRef peptideEvidence_ref="PepEv_1_1_1" />
+            <cvParam cvRef="MS" accession="MS:1000864" name="chemical compound formula" value="C(203) H(338) N(62) O(65) S(2)" />
+            <cvParam cvRef="MS" accession="MS:1002725" name="MSPathFinder:RawScore" value="1" />
+            <cvParam cvRef="MS" accession="MS:1002721" name="MSPathFinder:SpecEValue" value="6.26674953213828E-34" />
+            <cvParam cvRef="MS" accession="MS:1002722" name="MSPathFinder:EValue" value="1.98655960168784E-31" />
+          </SpectrumIdentificationItem>
+          <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="54.282407883183" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute" />
+        </SpectrumIdentificationResult>
+      </SpectrumIdentificationList>
+    </AnalysisData>
+  </DataCollection>
+</MzIdentML>

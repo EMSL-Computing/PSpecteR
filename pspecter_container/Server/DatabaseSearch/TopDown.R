@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_10_08
+## Last Updated: 2020_10_22
 
 # DESCRIPTION: Contains all the MSPathFinder Interface Reactives and Outputs
 list(
@@ -110,8 +110,11 @@ list(
       return(NULL)
     }
     
+    # Get environmental variable
+    mspathfindert_url <- Environment[Environment$Name == "MSPATHFINDERT_PATH", "Var"]
+    
     # Construct URL Call 
-    call <- paste("http://mspathfindert1:5000/MSPathFinderT?mzmlFile=", 
+    call <- paste(paste0(mspathfindert_url, "MSPathFinderT?mzmlFile="), 
               msPath(), "&fastaFile=", fastaPath(), "&modsFile=",
               ModsMSPFpath(), "&minCharge=", min(input$TDCharge),
               "&maxCharge=", max(input$TDCharge), "&minMass=",
@@ -122,6 +125,7 @@ list(
               input$TDPrecursorTol, "&f=", input$TDFragmentTol, "&tda=0&act=",
               unlist(strsplit(input$TDActMet, " - "))[1], sep = "")
     
+    # Send url call to terminal
     message(call)
     
     # Curl fetch memory for call
@@ -150,8 +154,11 @@ list(
       return(NULL)
     }
     
+    # Get environmental variable
+    mspathfindert_url <- Environment[Environment$Name == "MSPATHFINDERT_PATH", "Var"]
+    
     # Else, have task ID status pop up in sweet alert window
-    status <- curl::curl_fetch_memory(paste0("http://mspathfindert1:5000/status/", DS$MSPF))
+    status <- curl::curl_fetch_memory(paste0(mspathfindert_url, "status/", DS$MSPF))
     statusMessage <- jsonlite::fromJSON(rawToChar(status$content))
     
     # If state is started, create specific message. Otherwise, return state and clear temp variable.

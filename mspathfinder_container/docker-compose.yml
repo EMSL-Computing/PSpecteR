@@ -19,9 +19,12 @@ services:
     mspathfindert1:
         build:
             context: .
-        image: mspathfindert:1.0
+        image: mspathfindert:1.0.1
         container_name: mspathfindert1
+        environment:
+            - REDIS_PORT=6380
+            - GUNICORN_PORT=5001
         volumes:
-            - "${PSPECTER_DATA}:/data:z"
+            - "${PSPECTER_DATA}:/data"
         ports:
-            - "5000:5000"
+            - "5001:5001"

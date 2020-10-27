@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_10_08
+## Last Updated: 2020_10_22
 
 # DESCRIPTION: Contains all the MSGF+ Interface Outputs and Reactives
 
@@ -95,11 +95,15 @@ list(
       return(NULL)
     }
     
+    # Get environmental variable
+    msgf_url <- Environment[Environment$Name == "MSGF_PATH", "Var"]
+    
     # Construct URL Call 
-    call <- paste("http://msgf1:5000/MSGF?mzmlFile=", 
+    call <- paste(paste0(msgf_url, "MSGF?mzmlFile="), 
                   msPath(), "&fastaFile=", fastaPath(), "&paramsFile=",
                   ParamsMSGFpath(), sep = "")
     
+    # Send url call to terminal
     message(call)
     
     # Curl fetch memory for call
@@ -128,8 +132,11 @@ list(
       return(NULL)
     }
     
+    # Get environmental variable
+    msgf_url <- Environment[Environment$Name == "MSGF_PATH", "Var"]
+    
     # Else, have task ID status pop up in sweet alert window
-    status <- curl::curl_fetch_memory(paste0("http://msgf1:5000/status/", DS$MSGF))
+    status <- curl::curl_fetch_memory(paste0(msgf_url, "status/", DS$MSGF))
     statusMessage <- jsonlite::fromJSON(rawToChar(status$content))
     
     # If state is started, create specific message. Otherwise, return state and clear temp variable.

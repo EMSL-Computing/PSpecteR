@@ -3,6 +3,6 @@ source venv/bin/activate
 export PYTHONPATH=./MsgfPyServer:$PYTHONPATH
 export GUNICORN_CMD_ARGS="--timeout 480"
 
-exec redis-server &
+exec redis-server  --port $REDIS_PORT &
 exec celery --app=msgf_flask.celery_tasks worker --concurrency=1 --logfile=/flask/celery.log --loglevel=DEBUG &
-exec gunicorn -b :5000 --access-logfile - --error-logfile - msgf_flask.app:app
+exec gunicorn -b :$GUNICORN_PORT --access-logfile - --error-logfile - msgf_flask.app:app

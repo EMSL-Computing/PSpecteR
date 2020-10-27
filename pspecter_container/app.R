@@ -36,6 +36,10 @@ library(data.table)
 library(plotly)
 library(DT)
 
+# If the test files are not in the right directory, copy and move them 
+source(file.path("Server", "PrepTestFiles.R"), local = T)$value
+prepTestFiles()
+
 # Build the interface in which the user will interact. Inverse colors on the 
 # navigation bar will be used (black text as opposed to white). Title is PSpecteR.
 ui <- navbarPage(inverse = T, title = "PSpecteR", 
@@ -597,6 +601,9 @@ server <- function(input, output, session) {
   
   # Load description data 
   Desc <- data.frame(read_excel(file.path("Server", "Pop_Up_Functions", "Function_Descriptions.xlsx")))
+  
+  # Set environment variables
+  Environment <- read.csv("/SetEnvironment.csv", header = T)
   
   #######################
   ## 0. WELCOME SERVER ##

@@ -53,6 +53,8 @@ COPY Licenses /srv/shiny-server/Licenses
 COPY Server /srv/shiny-server/Server
 COPY www /srv/shiny-server/www
 COPY data /data
+COPY SetEnvironment.csv /SetEnvironment.csv
+COPY TestFiles /TestFiles
 
 # Make the ShinyApp available at port 3838
 EXPOSE 3838

@@ -14,6 +14,8 @@ clry.config_from_object(Config)
 
 logger = get_task_logger(__name__)
 
+logger.info(str(clry.conf))
+
 runner = MsgfRunner()
 
 @clry.task(bind=True, name='runFullProcess')

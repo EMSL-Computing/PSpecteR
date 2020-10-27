@@ -1,5 +1,7 @@
+import os 
 class Config:
-    broker_url='redis://localhost:6379/0'
-    result_backend='redis://localhost:6379/0'
+    redis_port = os.getenv('REDIS_PORT', '6379')
+    broker_url='redis://localhost:%s/0'%redis_port
+    result_backend='redis://localhost:%s/0'%redis_port
     result_serializer = 'json'
     task_ignore_result = False
