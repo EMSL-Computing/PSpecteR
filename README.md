@@ -4,7 +4,11 @@ This Docker container runs PSpecteR, a Shiny web application for tandem LC-MS pr
 
 ### USAGE
 
-To run the PSpecteR docker container and its two companion docker containers, build each container *within the container directory*: 
+We suggest downloading the docker images on Docker Hub and following the install directions there. 
+
+https://hub.docker.com/repository/docker/emslcomputing/pspecter/general
+
+If you would like to add your own code and rebuild the containers, build each container *within the container directory:*
 
 `docker build -t pspecter:1.0.0 .`
 
@@ -14,9 +18,9 @@ To run the PSpecteR docker container and its two companion docker containers, bu
 
 Then define the shared folder between the containers and use the docker compose file in the pspecter_container repo: 
 
-`export PSPECTER_DATA:/path/to/folder/with/data`
+In macOS: `export PSPECTER_DATA:/path/to/folder/with/data` or Windows: `$env:PSPECTER_DATA = "path/to/folder/with/data"`
 
-`docker-compose up`
+Use the docker compose file from the pspecter_container directory within the ForLocalRun under DockerCompose files: `docker-compose up`
 
 You may also run the pspecter_container by itself, but note that MS-GF+ and MSPathFinderT will not run: 
 
