@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_09_24
+## Last Updated: 2021_01_08
 
 # DESCRIPTION: This code contains all the functionality for all image export button functions
 
@@ -12,8 +12,8 @@ list(
 # Get exImage Dataframe
 getExImages <- reactive({
   if (length(revals$imgData) >= 1) {
-    exImages <- data.frame(names(revals$imgData))
-    colnames(exImages) <- c("Image Name")
+    Names <- as.character(names(revals$imgData))
+    exImages <- data.frame("Row" = 1:length(Names), "Image.Name" = Names, stringsAsFactors = FALSE)
     return(exImages)} else {return(NULL)}
 }),
 
@@ -73,7 +73,7 @@ output$exWidthUI <- renderUI({
   if (is.null(clicked)) {clicked <- 1}
   
   # Get plotName and see if plot sizes have been saved for this image
-  plotName <- getExImages()[clicked,]
+  plotName <- getExImages()[clicked, "Image.Name"]
   if (plotName %in% plots$plotSizes$PlotName) { 
     sizes <- plots$plotSizes[as.character(plots$plotSizes$PlotName) == plotName, "Size"]
     width <- as.numeric(unlist(strsplit(as.character(sizes), " "))[1])
@@ -94,7 +94,7 @@ output$exHeightUI <- renderUI({
   if (is.null(clicked)) {clicked <- 1}
   
   # Get plotName and see if plot sizes have been saved for this image
-  plotName <- getExImages()[clicked,]
+  plotName <- getExImages()[clicked, "Image.Name"]
   if (plotName %in% plots$plotSizes$PlotName) { 
     sizes <- plots$plotSizes[as.character(plots$plotSizes$PlotName) == plotName, "Size"]
     height <- as.numeric(unlist(strsplit(as.character(sizes), " "))[2])
@@ -120,7 +120,7 @@ observeEvent(input$exSizeChange, {
   
   # Keep records of all plot size changes (this is done since actively changing 
   # plot size will distort the app)
-  plotName <- getExImages()[clicked,]
+  plotName <- getExImages()[clicked, "Image.Name"]
   newData <- data.frame("PlotName" = plotName, "Size" = paste(width, height),
                stringsAsFactors = F)
   if (plotName %in% plots$plotSizes$PlotName) {
@@ -150,10 +150,11 @@ observeEvent(input$ssScan_row_last_clicked, {
   tabs <- c(input$SStabs, input$PTBtabs, input$SSAtabs)
   
   # Clear all plots not in tabs
-  if ("Spectrum" %in% tabs == F) {plots$currSPEC <- NULL}
+  if ("MS/MS" %in% tabs == F) {plots$currSPEC <- NULL}
   if ("Error Map" %in% tabs == F) {plots$currHM <- NULL}
   if ("XIC" %in% tabs == F)  {plots$currXIC <- NULL}
-  if ("Precursors" %in% tabs == F) {plots$currMPPRE <- plots$currMPNEXT <- NULL} 
+  if ("MS1" %in% tabs == F) {plots$currMPPRE <- NULL} 
+  if ("Next MS1" %in% tabs == F) {plots$currMPNEXT <- NULL}
   if ("Bar" %in% tabs == F) {plots$currSSBAR <- NULL}
   if ("Sequence" %in% tabs == F) {plots$currFLAG <- NULL}
   
@@ -254,15 +255,48 @@ observeEvent(input$imgSPEC, {
       
       title = HTML('<p style="text-align: center;">Select <em><strong>MZ & Intensity Ranges</strong></em> 
                  for the spectra</p>'),
-      footer = list(actionButton("ssSpecAdd", "Add Spectra"), modalButton("Exit")),
+      footer = list(uiOutput("exNumberPeaks"),
+        actionButton("ssSpecAdd", "Add Spectra"), modalButton("Exit")),
       size = "l", easyClose = F))}
+}),
+
+# Print number of peaks
+output$exNumberPeaks <- renderText({
+  
+  # Return NULL if no num peaks
+  if (is.null(getSSPeak())) {return(NULL)}
+  
+  # Pull peaks and subset by filters
+  peaks <- getSSPeak()
+  
+  # If no filters then proceed forward
+  if (is.null(input$ssSpecX) == F && is.null(input$ssSpecY) == F) {
+    peaks <- peaks[peaks$mz >= min(input$ssSpecX) & peaks$mz <= max(input$ssSpecX) &
+                   peaks$intensity >= min(input$ssSpecY) & peaks$intensity <= max(input$ssSpecY),]
+  }
+  
+  # Set export number of peaks
+  revals$exportPeakNum <- nrow(peaks)
+  
+  # Paste number of peaks
+  paste("Number of Peaks:", revals$exportPeakNum)
+  
 }),
 
 # Graph spectra in modal box
 output$exSPEC <- renderPlotly({
-  plots$currSPEC %>% 
-    layout(xaxis = list(range = c(min(input$ssSpecX), max(input$ssSpecX))),
-           yaxis = list(range = c(min(input$ssSpecY), max(input$ssSpecY))))
+  if (is.null(getSSPeak())) {return(NULL)}
+  if (nrow(getSSPeak()) > 10000) {
+    sendSweetAlert(session, "Export Spectra Warning", 
+                   "Spectra exportation limited to plots with no more than 10,000 peaks.",
+                   type = "warning")
+    return(NULL)
+  } else {
+    p <- plots$currSPEC %>% 
+      layout(xaxis = list(range = c(min(input$ssSpecX), max(input$ssSpecX))),
+             yaxis = list(range = c(min(input$ssSpecY), max(input$ssSpecY))))
+    plotly::toWebGL(p)
+  }
 }),
 
 # Reset Spectra MZ
@@ -283,6 +317,12 @@ observeEvent(input$ssSpecINTreset, {
 
 # Add spectra if button is clicked
 observeEvent(input$ssSpecAdd, {
+  
+  if (is.null(revals$exportPeakNum)) {
+    sendSweetAlert(session, "No Peaks to Plot", type = "error")
+    return(NULL)
+  }
+  
   plots$index <- plots$index + 1
   plots$currSPEC <- plots$currSPEC %>% 
     layout(xaxis = list(range = c(min(input$ssSpecX), max(input$ssSpecX))),
@@ -416,6 +456,15 @@ observeEvent(input$imgMPNEXT, {
 observeEvent(input$imgVPSPEC, {
   if (is.null(plots$currVPSPEC)) {
     sendSweetAlert(session, title = "No Vis PTM Spectra to Export", type = "error")} else {
+        
+    if (nrow(getSSPeak()) > 10000) {
+      sendSweetAlert(session, "Export Spectra Warning", 
+                     paste("Spectra exportation limited to plots with no more than 10,000 peaks.",
+                           "Fix in 2. Scan & XIC by setting an intensity filter."),
+                     type = "warning")
+      return(NULL)
+    }  
+      
     sendSweetAlert(session, title = "Vis PTM Spectra Snaphsot", 
       "Click 'Export Snapshot Images' in the right hand corner to see plots.", type = "success")
     plots$index <- plots$index + 1
@@ -565,7 +614,14 @@ output$exIMAGE <- renderPlotly({
   if (is.null(exImages)) {return(NULL)} else {
     clicked <- input$exTABLE_row_last_clicked
     if (is.null(clicked)) {clicked <- 1}
-    revals$imgData[[clicked]]}
+    p <- revals$imgData[[clicked]]
+    
+    # Convert to webGL for plots that are spectra
+    if (grepl("Spect", exImages[clicked, "Image.Name"])) {
+      plotly::toWebGL(p)
+    } else {p}
+      
+  }
 }),
 
 # Export data as PNG
@@ -668,7 +724,7 @@ output$sndHTML <- downloadHandler(
       incProgress(0.3, "Collecing Parameter Data")
       
       # Put all the parameters to be passed to the markdown file into a list
-      params <- list(htmlTitles = getExImages()$`Image Name`,  
+      params <- list(htmlTitles = getExImages()$Image.Name,  
                      htmlFigs = revals$imgData)
       
       # Insert directory information for pandoc

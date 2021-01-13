@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_08_03
+## Last Updated: 2020_12_29
 
 # DESCRIPTION: Contains the table and spectra for Vis PTM
 
@@ -624,14 +624,14 @@ list(
         xrange <- c(0, max(spectra$mzExp) + 1)
         yrange <- c(0, max(spectra$intensity) + 1)
         
-        p <- p %>% layout(xaxis = list(title = "M/Z (Mass to Charge)", range = xrange),
+        p <- p %>% layout(xaxis = list(title = "<i>m/z</i> (Mass to Charge)", range = xrange),
                           yaxis = list(title = "Intensity", range = yrange), 
                           title = paste("Scan:", scanNum), legend = list(orientation = "h"))
         
         plots$currVPSPEC <- p
         
         # Show plots
-        p
+        plotly::toWebGL(p)
       
   }),
   

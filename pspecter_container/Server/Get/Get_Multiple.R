@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_09_29
+## Last Updated: 2020_12_29
 
 # DESCRIPTION: This contains objects that contain a mix of either MS, ID, or FASTA data:
 # getScan, getScanMod, getProteinTree
@@ -47,6 +47,11 @@ list(
     scan <- scan[!is.na(scan$Scan.Num),]
     scan$Sequence <- as.character(scan$Sequence)
     
+    # Put MS1 at the end of the file if there is no id data
+    if (is.null(ID)) {
+      scan <- scan[order(-scan$MS.Level),]
+    }
+    
     return(scan)
     
   }),
@@ -88,11 +93,11 @@ list(
   getProteinTree <- reactive({
     
     # Get required files
-    req(getPTID(), getFasta(), getID(), getPTscan())
     PTID <- getPTID()
     fasta <- getFasta()
     ID <- getID()
     PTscan <- getPTscan()
+    if (is.null(PTID) | is.null(fasta) | is.null(ID) | is.null(PTscan)) {return(NULL)}
     
     # Get user click on Protein Tree table
     clicked <- input$PTTable_row_last_clicked

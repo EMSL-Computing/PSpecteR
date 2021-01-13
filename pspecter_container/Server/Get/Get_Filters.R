@@ -17,56 +17,6 @@ list(
     }))
   }, 
   
-  # Get precursor window
-  getPrecursorWindow <- reactive({
-    
-    # If no scan data, return null
-    if (is.null(getScan())) {return(NULL)}
-    
-    # Get scan number
-    scanNum <- getScan()[getScanClick(), "Scan.Num"]
-    Pre.MZ <- getScan()[getScanClick(), "Pre.MZ"]
-    
-    # Window size for precursor 
-    winLower <- winUpper <- 1
-    if (getFileType() == "mzms") {
-      
-      # The header information is not read correctly for one of the test files and needs to be corrected 
-      winLower <- getHeader()[getHeader()$acquisitionNum == scanNum,]$isolationWindowLowerOffset
-      winUpper <- getHeader()[getHeader()$acquisitionNum == scanNum,]$isolationWindowUpperOffset
-      
-    } else if (getFileType() == "raw") {
-        
-      # Get names of all isolation width 
-      RAWall <- getRAWall()
-      IW <- unlist(lapply(names(RAWall), function(name) {if (grepl("IsolationWidth", name)) return(name)}))
-      
-      # If not 0, split the value of the window
-      val <- max(getRAWall()[getRAWall()$scanNumber == scanNum, IW])
-      if (val != 0) {val <- val / 2} else {val <- 1}
-      winLower <- winUpper <- val
-    }
-    
-    window <- c(winLower, winUpper)
-    
-    # Increase window size if parameter is set
-    if (is.null(input$MPwinsize) == F) {
-      
-      # Get window increase size
-      increaseBy <- abs(input$MPwinsize)
-      if (increaseBy > 50) {
-        increaseBy <- 50
-        sendSweetAlert(session, "Window Size Warning", "Window size has a limit at 50 m/z", "warning")
-      }
-      
-      # Apply change
-      window <- increaseBy + window
-    }
-    
-    return(window)
-    
-  }),
-  
   # Get file's type to determine data processing. Returns null if no file.
   getFileType <- reactive({
     

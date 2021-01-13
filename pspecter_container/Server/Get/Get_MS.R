@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_07_17
+## Last Updated: 2021_01_08
 
 # DESCRIPTION: This contains the get functions which are directly related to the MS file:
 # getRAW, getRAWall, getRAWScanSM, getMZMS, getHeader, getSSPeak, getXIC, 
@@ -155,10 +155,10 @@ list(
     
     # Add RT to first column
     xics[,1] <- metadata$RetentionTime
-    nonZero <- which(rowSums(xics[,-1]) > 0)
     
-    # Return xics
-    return(xics[nonZero,])
+    # Return XICs
+    return(xics)
+  
   },
   
   # Get XIC Object
@@ -177,9 +177,13 @@ list(
                    "rgb(204,000,204)", "rgb(204,000,102)", "rgb(128,128,128)",
                    "rgb(000,000,000)")
     
-    # Get all Precursor MZ Values, charge, and adjusted MZ (up to 12 (user set parameter))
+    # Get Precursor MZ and Charge Values
     preMZ <- input$premzXIC
     preCh <- input$prechXIC
+    
+    # Return NULL if nothing exists yet
+    if (is.null(preMZ) || is.na(preMZ)) {return(NULL)}
+    if (is.null(preCh) || is.na(preCh)) {return(NULL)}
     
     # Check if the values are equal to 0. If so, use the precursor mz/charge value 
     # in the scan metadata table. If it's still zero, return NULL.
@@ -188,13 +192,23 @@ list(
     if (preCh == 0) {preCh <- getScan()[getScanClick(), "Pre.Charge"]}
     if (preCh == 0) {return(NULL)}
   
-    # Detemine mz values based on isotope or charge (user-specified setting)
-    if (input$XICmode == F) {
-      adjMZ <- unlist(lapply(as.numeric(input$isoXIC), function(isoXIC) {
+    # If there are no isotopes selected, then return the preMZ
+    if (length(input$isoXIC) < 1) {calcIsotopes <- preMZ} else {
+      
+      # Else, determine the MZ values first by calculating isotopes
+      calcIsotopes <- unlist(lapply(as.numeric(input$isoXIC), function(isoXIC) {
         preMZ + (isoXIC / preCh)}))
-    } else {
-      adjMZ <- unlist(lapply(as.numeric(input$chargeTraceXIC), function(charge) {
-        if (charge != 0) {preMZ / abs(charge)}}))
+      
+    }
+    
+    # If there are no charge states selected, then just return the calcIsotopes
+    if (length(input$chargeTraceXIC) < 1) {adjMZ <- calcIsotopes} else { 
+      
+      # Then divide by charge states to get adjusted MZ values
+      adjMZ <- unlist(lapply(calcIsotopes, function(isotopes) {
+        isotopes / as.numeric(input$chargeTraceXIC)
+      }))
+      
     }
     
     # Create function to return RT that need 0's 
@@ -206,56 +220,41 @@ list(
     
     # Do the following if the file is raw 
     if (getFileType() == "raw") {
-    
+      
       # Calculate the XIC
       XIC <- readXICs(msPath(), adjMZ, tol = input$tolXIC)
       
-      # Create all trace dataframe for plotting purposes
-      AllTraces <- data.frame(mz = numeric(0), rt = numeric(0), int = numeric(0),
-                              lab = character(0), color = character(0))
+      # Create labels vector
+      labels <- expand.grid(paste0("[M+", input$isoXIC, "]<sup>"), 
+                            paste0(input$chargeTraceXIC, "</sup>"))
+      labels <- paste0(labels$Var1, labels$Var2)
+      labels <- sort(labels)
       
-      # With the calculations, plot each trace
-      for (el in 1:length(adjMZ)) {
+      # Pull Retention Time and Intensity from XICs
+      AllTraces <- do.call(rbind, lapply(1:length(XIC), function(idx) {
+      
+        # Get retention time and intensity
+        rt <- XIC[[idx]]$times
+        int <- XIC[[idx]]$intensities
         
-        # Do nothing if there's no data 
-        if (length(XIC[[el]]$times) > 0) {
-          
-          # Change label depending on charge or isotope
-          if (input$XICmode == F) {
-            lab <- paste("M+", input$isoXIC[el], sep = "")
-            if (lab == "M+0") {lab <- "M"}
-          } else {
-            lab <- paste("Precursor (+", input$chargeTraceXIC[el], ")", sep = "")
-          }
-          
-          # Set the trace's color (with a max of 13 colors)
-          colNum <- el %% 13
-          if (colNum == 0) {colNum <- 13}
-          color <- colorList[colNum]
-          
-          # Isolate mz, retention time, and intensity data
-          trace <- XIC[[el]]
-          trace <- data.frame(mz = rep(trace$mass, length(trace$times)), 
-                              rt = trace$times, int = trace$intensities)
-          
-          # Add trace information to all traces if there is any 
-          if (nrow(trace) != 0) {
-          
-            # Get 0 dataframe
-            rt0 <- gen0(trace)
-            trace0 <- data.frame(mz = rep(trace$mz[1], length(rt0)),
-                                 rt = rt0, int = rep(0, length(rt0)))
-            trace <- rbind(trace, trace0)
-            trace <- trace[order(trace$rt),]
-            trace$lab <- lab
-            trace$color <- color
-            AllTraces <- rbind(AllTraces, trace)
-          }
-        }
-      }
+        # Return NULL if no RT nor INT
+        if (is.null(rt) || is.null(int)) {return(NULL)}
+        
+        # Create col index
+        colIdx <- idx
+        if (colIdx > length(colorList)) {coldIdx <- length(colorList)}
+        
+        return(data.frame(
+          "mz" = adjMZ[idx], rt, int, "lab" = labels[idx], "color" = colorList[colIdx]
+        ))
+        
+      }))
+      
       return(AllTraces)
       
-    } else if (getFileType() == "h5") {
+    } else 
+    
+    if (getFileType() == "h5") {
       
       # Get variables for XIC function
       h5file <- msPath()
@@ -272,35 +271,43 @@ list(
       mz <- rep(adjMZ, nrow(XIC))
       mz <- mz[order(mz)]
       
-      # Format labels 
+      # Get positional information
       pos <- rep(0:(length(levels(as.factor(mz))) - 1), nrow(XIC))
       pos <- pos[order(pos)]
-      lab <- paste("M+", pos, sep = "")
       
-      # Color position
-      pos <- unlist(lapply(pos, function(pos) {
+      # Create labels vector
+      labels <- expand.grid(paste0("[M+", input$isoXIC, "]<sup>"), 
+                            paste0(input$chargeTraceXIC, "</sup>"))
+      labels <- paste0(labels$Var1, labels$Var2)
+      labels <- sort(labels)
+      
+      # Set color position
+      colPos <- unlist(lapply(pos, function(pos) {
         pos <- pos %% 13
         if (pos == 0) {pos <- 13}
         return(pos)
       }))
       
+      # Fix positional information 
+      pos <- pos + 1
+      
       AllTraces <- data.frame(mz = mz, rt = rep(XIC[,1], length(levels(as.factor(mz)))), 
-                 int = c(XIC[,-1]), lab = lab, color = colorList[pos])
+                 int = c(XIC[,-1]), lab = labels[pos], color = colorList[colPos])
+      
       return(AllTraces)
     } 
     
   }),
   
   # Get scan data for specified region
-  peakDataRange <- function(PreScanNum, Pre.MZ, window) {
+  peakDataRange <- function(PreScanNum, Pre.MZ, NumPeaks) {
     
     # Get the file type as function calls are different for raw
     fileType <- getFileType()
     if (is.null(fileType)) {return(NULL)}
     
-    # Set window ranges
-    low <- Pre.MZ - window[1]
-    high <- Pre.MZ + window[2]
+    # If is null NumPeaks, make it the default of 20
+    if (is.null(NumPeaks) || is.na(NumPeaks)) {NumPeaks <- 20}
     
     # Grab peak data from XML file
     if (fileType == "mzms") {
@@ -327,19 +334,77 @@ list(
     # Return NULL if no peak information. If yes, add zeros around the data. 
     if (nrow(peak) == 0) {return(NULL)} else {
       
+      # Calculate the most abundant isotope and subset out data by number of peaks 
+      # near the closest match of Pre.MZ
+      colnames(peak) <- c("mz", "int")
+      matchIndex <- which.min(abs(peak$mz - Pre.MZ))
+      
+      # Set the minimum index, with a minimum value of 1
+      minIndex <- matchIndex - NumPeaks
+      if (minIndex < 1) {minIndex <- 1}
+      
+      # Set the maximum index, with a maximum value of the number of peaks
+      maxIndex <- matchIndex + NumPeaks
+      if (maxIndex > nrow(peak)) {maxIndex <- nrow(peak)}
+      
+      # Subset peak data by these indices
+      peak <- peak[minIndex:maxIndex,]
+      
+      # Return dataframe with zeroes around peaks
+      if (nrow(peak) == 0) {return(NULL)} else {
+        peak <- data.frame(do.call(rbind, lapply(1:nrow(peak), function(row) {
+          rbind(c(mz = peak$mz[row] - 1e-9, int = 0), c(mz = peak$mz[row], int = peak$int[row]),
+                c(mz = peak$mz[row] + 1e-9, int = 0))})))
+      return(peak)}}
+  },
+  # Get scan data for specified region
+  peakDataRange <- function(PreScanNum, Pre.MZ, window) {
+    
+    # Get the file type as function calls are different for raw
+    fileType <- getFileType()
+    if (is.null(fileType)) {return(NULL)}
+    
+    # Set window ranges
+    low <- Pre.MZ - window
+    high <- Pre.MZ + window
+    
+    # Grab peak data from XML file
+    if (fileType == "mzms") {
+      mzms <- getMZMS()
+      if (is.null(mzms)) {return(NULL)}
+      scanNum <- PreScanNum
+      entryNum <- match(scanNum, getScan()$Scan.Num[order(getScan()$Scan.Num)])
+      peak <- data.frame(peaks(mzms, entryNum))
+    } 
+    
+    # Grab peak data from raw file
+    if (fileType == "raw") {
+      scans <- readScans(msPath(), scans = PreScanNum)
+      peak <- data.frame(scans[[1]]$mZ, scans[[1]]$intensity)
+    }
+    
+    # Get peak data from h5 file
+    if (fileType == "h5") {
+      scanNum <- PreScanNum
+      peak <- data.frame(h5read(msPath(), paste("Spectra_mz_arrays/", scanNum, sep = "")),
+                         h5read(msPath(), paste("Spectra_intensity_arrays/", scanNum, sep = "")))
+    }
+    
+    # Return NULL if no peak information. If yes, add zeros around the data. 
+    if (nrow(peak) == 0) {peak <- data.frame(mz = c(low, high), int = c(0, 0))} else {
+      
       # Calculate the most abundant isotope and subset out data
       colnames(peak) <- c("mz", "int")
       peak <- peak[peak$mz >= low & peak$mz <= high & peak$int != 0,] 
       
       # Return dataframe with zeroes around peaks
       if (nrow(peak) == 0) {
-        sendSweetAlert(session, "Precursor Error", "Increase Precursor Window Size", "warning")
-        return(NULL)
+        peak <- data.frame(mz = c(low, high), int = c(0, 0))
       } else {
-      peak <- data.frame(do.call(rbind, lapply(1:nrow(peak), function(row) {
-        rbind(c(mz = peak$mz[row] - 1e-9, int = 0), c(mz = peak$mz[row], int = peak$int[row]),
-              c(mz = peak$mz[row] + 1e-9, int = 0))})))
-      return(peak)}}
+        peak <- data.frame(do.call(rbind, lapply(1:nrow(peak), function(row) {
+          rbind(c(mz = peak$mz[row] - 1e-9, int = 0), c(mz = peak$mz[row], int = peak$int[row]),
+                c(mz = peak$mz[row] + 1e-9, int = 0))})))}
+      return(peak)}
   },
   
   # Get precursor isotope distribution
@@ -375,9 +440,9 @@ list(
       # Add formulas together and converted to a string for RDisop
       completeForm <- bind_rows(seqForm, modForm) 
       completeForm <- paste(lapply(1:ncol(completeForm), function(col) {
-          if (sum(completeForm[,col]) != 0) {
-            paste(names(completeForm)[col], sum(completeForm[,col], na.rm = T), sep = "")
-          } else {""}
+        if (sum(completeForm[,col]) != 0) {
+          paste(names(completeForm)[col], sum(completeForm[,col], na.rm = T), sep = "")
+        } else {""}
       }), collapse = "")
       
       # Get isotopic distribution
@@ -400,8 +465,9 @@ list(
     if (MS.Level == 1) {return(NULL)}
     
     # If no window, return null
-    window <- getPrecursorWindow()
+    window <- input$MPwinsize
     if (is.null(window)) {return(NULL)}
+    if (window == 0) {window <- 5} 
     
     # Get scan number, peak information based on window size, and pre mz
     scanNum <- getScan()[getScanClick(), "Scan.Num"]
@@ -411,6 +477,7 @@ list(
     
     # Get range
     MatchedPre <- peakDataRange(PreScanNum, Pre.MZ, window)
+    
     if (is.null(MatchedPre) || nrow(MatchedPre) == 0) {return(NULL)}
     
     # Get precursor isotope distribution
@@ -419,9 +486,9 @@ list(
     # If precursor isotope distribution is null, fill the new columns with NA values
     if (is.null(isoDist)) {
       MatchedPre <- data.frame("mz" = MatchedPre$mz, "int" = MatchedPre$int, "Isotopes" = NA,
-        "Ref.Int" = NA, "Exp.Int" = NA, "Perc.Diff" = NA)
+                               "Ref.Int" = NA, "Exp.Int" = NA, "Perc.Diff" = NA)
     } else {
-    
+      
       # Create trunc function for third decimal place
       trunc2 <- function(x) {trunc(x * 100)/100}
       
@@ -472,9 +539,10 @@ list(
     MS.Level <- getScan()[getScanClick(), "MS.Level"]
     if (MS.Level == 1) {return(NULL)}
     
-    # If no window, return null
-    window <- getPrecursorWindow()
+    # If no window, return null. If window is 0, change it to 5. 
+    window <- input$MPwinsize
     if (is.null(window)) {return(NULL)}
+    if (window == 0) {window <- 5} 
     
     # Get all Ms1 scans and if none, return null
     AllMs1 <- getAllMs1()
@@ -530,5 +598,4 @@ list(
     return(MatchedPre)
     
   })
-  
 )

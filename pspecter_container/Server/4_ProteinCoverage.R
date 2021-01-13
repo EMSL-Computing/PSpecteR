@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_09_22
+## Last Updated: 2020_12_29
 
 # DESCRIPTION: Contains all the protein coverage tables and figures
 
@@ -169,7 +169,7 @@ list(
     
     plots$currMATCH <- p
     
-    p
+    plotly::toWebGL(p)
   }),
   
   # Makes barchart of protein tree data 
@@ -234,7 +234,7 @@ list(
     # If all the Q-Values are NA give this warning
     if ((FALSE %in% unique(is.na(scan$Q.Value))) == F) {
       HTML('<strong><span style="color: rgb(184, 49, 47); background-color: rgb(247, 218, 100);">
-           WARNING: ALL Q-VALUES ARE NA! </span></strong>')
+           No Q-Values provided. Filtering disabled. </span></strong>')
     } else {return(NULL)}
     
   })

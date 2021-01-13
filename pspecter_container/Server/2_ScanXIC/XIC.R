@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_08_03
+## Last Updated: 2020_12_29
 
 # DESCRIPTION: Contains all XIC functions
 
@@ -32,59 +32,6 @@ list(
   ####################
   ## RENDER WIDGETS ##
   ####################
-  
-  # Render the "XIC Mode" Switch
-  output$XICmodeSWITCH <- renderUI({
-    XM <- materialSwitch("XICmode", HTML("<strong>Charge State?</strong>"), value = F, status = "success")
-    if (is.null(input$infoMode) == F && input$infoMode == T) {
-      popify(XM, Desc[Desc$Name == "XICmode", "Title"], Desc[Desc$Name == "XICmode", "Description"],
-             options = list(selector = '.material-switch'), placement = 'right')
-    } else {XM}
-  }),
-  
-  # Set the isotopic max number of isotopes
-  output$setIsoMaxXIC <- renderUI({
-    if (is.null(input$XICmode) == F && input$XICmode == F) {
-      ISX <- numericInput("isomaxXIC", "Max Num of Isotopes", value = 5, step = 1)
-      if (is.null(input$infoMode) == F && input$infoMode == T) {
-        popify(ISX, Desc[Desc$Name == "isomaxXIC", "Title"], Desc[Desc$Name == "isomaxXIC", "Description"])
-      } else {ISX}
-    } else {return(NULL)}
-  }),
-  
-  # Set XIC Number of Isotopes
-  output$setIsoXIC <- renderUI({
-    if (is.null(input$XICmode) == F && input$XICmode == F) {
-      if (is.null(input$isomaxXIC) == F) {isoMax <- round(input$isomaxXIC)} else {isoMax <- 5}
-      if (is.na(isoMax) || isoMax < 1) {isoMax <- 1} 
-      if (isoMax > 100) {isoMax <- 100}
-      pickerInput("isoXIC", label = "Select Isotopes", choices = 0:isoMax, 
-         selected = 0:isoMax, multiple = T, options = list(`actions-Box` = T))
-    } else {return(NULL)}
-  }),
-  
-  # Set max charge state XIC
-  output$setMaxChargeXIC <- renderUI({
-    if (is.null(input$XICmode) == F && input$XICmode == T) {
-      # Start and stop points for M+ charges
-      CMX <- numericInput("chargemaxXIC", "Max Charge State", value = 3, step = 1)
-      if (is.null(input$infoMode) == F && input$infoMode == T) {
-        popify(CMX, Desc[Desc$Name == "chargemaxXIC", "Title"], Desc[Desc$Name == "chargemaxXIC", "Description"])
-      } else {CMX}
-    } else {return(NULL)}
-  }),
-  
-  # Set XIC's Number of Charge States
-  output$setChargeStateXIC <- renderUI({
-    if (is.null(input$XICmode) == F && input$XICmode == T) {
-      if (is.null(input$chargemaxXIC) == F) {chargeMax <- round(input$chargemaxXIC)} else {
-        chargeMax <- 3}
-      if (is.na(chargeMax) || chargeMax < 1) {chargeMax <- 1}
-      if (chargeMax > 100) {chargeMax <- 100}
-      pickerInput("chargeTraceXIC", label = "Select Charges", choices = 1:chargeMax,
-                  selected = 1:chargeMax, multiple = T, options = list(`actions-Box` = T))
-    } else {return(NULL)}
-  }),
   
   # Set XIC Mass
   output$massXIC <- renderUI({
@@ -156,11 +103,6 @@ list(
     XIC <- getXIC()
     if (is.null(XIC)) {return(NULL)}
     
-    # Determine if isotope mode or adjacent charge state mode
-    if (is.null(input$XICmode) == F && input$XICmode == F) {
-      mode <- "Isotope:"
-    } else {mode <- "Charge:"}
-    
     # Initiate plotly
     p <- plot_ly()
       
@@ -170,19 +112,17 @@ list(
       # Use the label to extract out the trace for plotting
       lab <- unique(XIC$lab)[el]
       trace <- XIC[XIC$lab == lab,]
-
+      
       p <- add_trace(p, x = trace$rt, y = trace$int, type = "scatter",
             mode = "lines+markers", line = list(color = trace$color),
             marker = list(color = trace$color), name = trace$lab,
-            connectgaps = T, hoverinfo = "text", hovertext = paste(mode, trace$lab, 
+            connectgaps = T, hoverinfo = "text", hovertext = paste(trace$lab, 
             "<br>RT:", round(trace$rt, 3), "min", "<br>Int:", round(trace$int)))
     }
 
     # Get retention time and max intensity
-    clicked <- getScanClick()
-    scan <- getScan()
-    lastRT <- scan[clicked, "RT"]
-    maxInt <- max(XIC$int)
+    lastRT <- getScan()[getScanClick(), "RT"]
+    maxInt <- max(XIC$int, na.rm = T)
     preMZ <- input$premzXIC
     preCh <- input$prechXIC
     
@@ -192,9 +132,7 @@ list(
     xRAN <- c(start, lastRT + 5)
     
     # Determine plot title 
-    if (is.null(input$XICmode) == F && input$XICmode == F) {
-      title <- paste("XIC for Mass:", preMZ, "and Charge:", preCh)
-    } else {title <- paste("XIC for Mass:", preMZ)}
+    title <- paste("XIC for Mass:", preMZ, "and Charge:", preCh)
     
     # Add plot features
     p <- p %>% layout(xaxis = list(title = "Retention Time (min)", range = xRAN), 

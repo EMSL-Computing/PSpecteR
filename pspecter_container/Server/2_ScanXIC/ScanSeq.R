@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_08_03
+## Last Updated: 2021_01_07
 
 # DESCRIPTION: Generates Scan & Seq plots not isolated in the other scripts
 
@@ -58,7 +58,7 @@ list(
   
   # Render the Annotate Spectra Widget
   output$ssLetterSWITCH <- renderUI({
-    SL <- materialSwitch("ssLetter", label = HTML("<strong>Annotate Spectrum?</strong>"), value = F, status = "success")
+    SL <- materialSwitch("ssLetter", label = HTML("<strong>Annotate Spectra</strong>"), value = F, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(SL, Desc[Desc$Name == "ssLetter", "Title"], Desc[Desc$Name == "ssLetter", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
@@ -67,7 +67,7 @@ list(
   
   # Render the Real Time Editing Widget
   output$RealTimeSWITCH <- renderUI({
-    RTE <- materialSwitch("RealTime", HTML("<strong>Real-Time Editing?</strong>"), value = T, status = "success")
+    RTE <- materialSwitch("RealTime", HTML("<strong>Freeze Interactive Spectra Editing</strong>"), value = T, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(RTE, Desc[Desc$Name == "RealTime", "Title"], Desc[Desc$Name == "RealTime", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
@@ -76,7 +76,7 @@ list(
   
   # Render the Bar: Count Per Fragment Widget
   output$ssBarCTFragSWITCH <- renderUI({
-    BCTF <- materialSwitch("ssBarCTFrag", HTML("<strong>Bar: Count Per Frag?</strong>"), value = T, status = "success")
+    BCTF <- materialSwitch("ssBarCTFrag", HTML("<strong>Barplot: Count Ions per Fragment</strong>"), value = T, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(BCTF, Desc[Desc$Name == "ssBarCTFrag", "Title"], Desc[Desc$Name == "ssBarCTFrag", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
@@ -85,7 +85,7 @@ list(
   
   # Render the Seq: Annotate PTMs Widget
   output$ssAnoPTMSWITCH <- renderUI({
-    SAP <- materialSwitch("ssAnoPTM", HTML("<strong>Seq: Annotate PTMs?</strong>"), value = T, status = "success")
+    SAP <- materialSwitch("ssAnoPTM", HTML("<strong>Annotate Modifications in Plots</strong>"), value = T, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(SAP, Desc[Desc$Name == "ssAnoPTM", "Title"], Desc[Desc$Name == "ssAnoPTM", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
@@ -94,7 +94,7 @@ list(
   
   # Render the "Remove Isotopes: Graphics?" Slider
   output$ssISOgraphsSWITCH <- renderUI({
-    SIG <- materialSwitch("ssISOgraphs", HTML('<strong>Remove Iso: Graphics?</strong>'), value = T, status = "success")
+    SIG <- materialSwitch("ssISOgraphs", HTML('<strong>Remove Isotopes in Plots</strong>'), value = T, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(SIG, Desc[Desc$Name == "ssISOgraphs", "Title"], Desc[Desc$Name == "ssISOgraphs", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
@@ -103,7 +103,7 @@ list(
   
   # Render the "Remove Isotopes: Spectra?" Slider
   output$ssISOspectraSWITCH <- renderUI({
-    SIS <- materialSwitch("ssISOspectra", HTML('<strong>Remove Iso: Spectra?</strong>'), value = F, status = "success")
+    SIS <- materialSwitch("ssISOspectra", HTML('<strong>Remove Isotopes from Spectra</strong>'), value = F, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(SIS, Desc[Desc$Name == "ssISOspectra", "Title"], Desc[Desc$Name == "ssISOspectra", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
@@ -190,6 +190,13 @@ list(
     if (is.null(rows) == F) {
       frag <- frag[rows,]
       peak <- peak[trunc2(peak$mz) %in% trunc2(frag$mzExp),]
+    }
+    
+    # If there are more than 50,000 peaks in the spectra, let user know. 
+    if (nrow(peak) > 5e4) {
+      sendSweetAlert(session, "Plotting more than 50,000 peaks", 
+        paste("This may take a while to generate and the resulting spectra",
+          "will be very busy. Consider setting filters in 1. Filter Settings."))
     }
    
     ##############################################
@@ -279,13 +286,13 @@ list(
       yrange <- c(0, max(spectra$intensityExp))
    }
       
-    p <- p %>% layout(xaxis = list(title = "M/Z (Mass to Charge)", range = xrange),
+    p <- p %>% layout(xaxis = list(title = '<i>m/z</i> (Mass to Charge)', range = xrange),
                  yaxis = list(title = "Intensity", range = yrange), 
                  title = paste("Scan:", scanNum), legend = list(orientation = "h"))
   
     plots$currSPEC <- p
   
-    p
+    plotly::toWebGL(p)
     }
     
   }),
@@ -473,7 +480,18 @@ list(
   }),
   
   # Output full screen spectra
-  output$bigSpec <- renderPlotly({plots$currSPEC}),
+  output$bigSpec <- renderPlotly({
+    if (is.null(getSSPeak())) {return(NULL)}
+    if (nrow(getSSPeak()) > 50000) {
+      sendSweetAlert(session, "Full Screen Warning", 
+                     "Full screen disabled for spectra with more than 50,000 peaks.",
+                     type = "warning")
+      return(NULL)
+    } else {
+      p <- plots$currSPEC
+      plotly::toWebGL(p)
+    }
+  }),
   
   # Output New Seq Warnings
   output$ssNSWarn <- renderText({

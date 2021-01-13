@@ -1,7 +1,7 @@
 ################################################################################
 ################### PSpecteR, a proteomics QC Shiny App ########################
 ########### David Degnan, Pacific Northwest National Laboratory ################
-####################### Last Updated: 2020_10_20 ###############################
+####################### Last Updated: 2021_01_08 ###############################
 ################################################################################
 
 # Load the package for Shiny App infrastructure
@@ -40,9 +40,17 @@ library(DT)
 source(file.path("Server", "PrepTestFiles.R"), local = T)$value
 prepTestFiles()
 
+# Define function to render images in ui
+imgRender <- function(id, path, width, height) {
+  return(img(id = id, src = path, contentType = "image/png", width = width, height = height, align = "left"))
+}
+
+# Suppress all warnings
+options(warn=-1)
+
 # Build the interface in which the user will interact. Inverse colors on the 
 # navigation bar will be used (black text as opposed to white). Title is PSpecteR.
-ui <- navbarPage(inverse = T, title = "PSpecteR", 
+ui <- navbarPage(id = "mainTabs", inverse = T, title = "PSpecteR", 
                                 
    ################################
    ##  0. WELCOME USER INTERFACE ##
@@ -60,9 +68,14 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
     column(12, img(src = "Divider_Line.png", 
       width = "600px", contentType = "image/png", align = "left")),
     
-    # Add Welcome Page PNG 
-    column(12, img(src = "PSpecteR_Intro_Graphic.png", contentType = "image/png",
-      width = "600px", height = "342px", align = "left")),
+    # Add Welcome Page PNG with buttons
+    column(12, imgRender("AppFunctions", "WelcomeImage/AppFunctions.png", "600px", "75px")),
+    column(2, imgRender("Page1", "WelcomeImage/Upload.png", "200px", "200px")),
+    column(2, imgRender("Page2", "WelcomeImage/MSnXIC.png", "200px", "200px")),
+    column(8, imgRender("Page3", "WelcomeImage/VisPTM.png", "200px", "200px")),
+    column(2, imgRender("Page4", "WelcomeImage/ProteinCoverage.png", "200px", "200px")),
+    column(2, imgRender("Page5", "WelcomeImage/DatabaseSearch.png", "200px", "200px")),
+    column(8, imgRender("Page6", "WelcomeImage/AdditionalPlots.png", "200px", "200px")),
     column(12, img(src = "Divider_Line.png", contentType = "image/png", 
       width = "600px", align = "left")),
     
@@ -85,7 +98,7 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
     
     # Upload an MS File: Shiny files button or type path
     bsCollapse(multiple = T, bsCollapsePanel(
-      title = HTML('<p><strong>MS FILE (Required)</strong></p>'),
+      title = HTML('<p><strong>Mass Spectra (MS) FILE (Required)</strong></p>'),
       shinyFilesButton("mzmsFile", HTML("<strong>Search Folders:</strong> mzML, mzXML, raw"), 
                        "Choose MS File: mzML, mzXML, or raw", F), hr(),
       textInput("mzmsHandle", "...or type in the MS file path", "", placeholder = "Type full MS file path with forward slashes"),
@@ -98,7 +111,7 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
   # The second side panel allows for a user to upload an optional mzID file.
   sidebarLayout(sidebarPanel(
     
-    bsCollapse(bsCollapsePanel(title = HTML('<p><strong>ID FILE (Optional)</strong></p>'),
+    bsCollapse(bsCollapsePanel(title = HTML('<p><strong>Peptide Identification (ID) FILE (Optional)</strong></p>'),
       shinyFilesButton("idFile", HTML("<strong>Search Folders:</strong> mzid, mzID"), 
                        "Choose ID File: mzid", F), hr(),
       textInput("idHandle", "...or type in the ID file path", "", placeholder = "Type full ID file path with forward slashes"),
@@ -109,7 +122,7 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
   
   # The third side panel allows for a user to upload an optional fasta file.
   sidebarLayout(sidebarPanel(
-    bsCollapse(bsCollapsePanel(title = HTML('<p><strong>FA FILE (Optional)</strong></p>'),
+    bsCollapse(bsCollapsePanel(title = HTML('<p><strong>FASTA Protein Database (FA) FILE (Optional)</strong></p>'),
     shinyFilesButton("fastaFile", HTML("<strong>Search Folders:</strong> FASTA, FA"), 
                      "Choose FA File: FASTA (FA)", F), hr(), 
       textInput("fastaHandle", "...or type in the FA file path", "", placeholder = "Type full FA file path with forward slashes"),
@@ -159,7 +172,7 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
        # Allows users to select how far off the experimental fragment value can be from the theoretical fragment value.
        HTML("<strong>Filter spectra data by...</strong></p>"), hr(),
        uiOutput("SelectedIons"),
-       numericInput("ssIntenMin", "Intensity", 1, min = 1, max = 1e9, step = 10),
+       numericInput("ssIntenMin", "Intensity", 100, min = 1, max = 1e9, step = 10),
        sliderInput("ssTolerance", "Fragment Tolerance (PPM)", 0.1, 20, 10, 0.1, T),    
        sliderInput("ssIsoPerMin", "Isotopic Percentage", 1, 100, 10, 1, T),
        sliderTextInput("ssCorrScoreFilter", "Correlation Score", c(0:100/100, "ALL"), selected = "ALL")), 
@@ -183,7 +196,7 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
          uiOutput("RealTimeSWITCH"),
          
          # Place spectra in large pop up window
-         actionButton("ssLargeSpec", "Spectra Full Screen")),
+         actionButton("ssLargeSpec", "See the Spectrum in Full Screen")),
       
        bsCollapsePanel("2b. Isotope Settings",
           
@@ -208,8 +221,8 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
        bsCollapsePanel("4a. MS1 Plots Settings", 
          
          # Most Abundant Isotope switch, Trace switch, and Pre MZ range
-         numericInput("MPpercdiff", "Percent Error", 25),
-         numericInput("MPwinsize", "Increase Window (m/z)", 5),
+         numericInput("MPpercdiff", "Filter by Percent Error", 25),
+         numericInput("MPwinsize", "Set MS1 Window Size", 3),
          actionButton("MPlargePre", "MS1 Full Screen"),
          actionButton("MPlargeNext", "Next MS1 Full Screen")),
        
@@ -250,12 +263,13 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
        # XIC Tolerance
        numericInput("tolXIC", "Set XIC Tolerance (ppm)", value = 10, step = 1), hr(),
        
-       # Have slider to switch between Isotope and Charge State Mode
-       uiOutput("XICmodeSWITCH"),
+       # Pick the number of isotopes to plot
+       pickerInput("isoXIC", label = "Select Isotopes", choices = 0:5, 
+                   selected = 0:2, multiple = T, options = list(`actions-Box` = T)), 
        
-       # Pick the actual isotopes to calculate and split data into readable chunks
-       uiOutput("setIsoMaxXIC"), uiOutput("setIsoXIC"),
-       uiOutput("setMaxChargeXIC"), uiOutput("setChargeStateXIC"), hr(),
+       # Pick the number of charge states to plot
+       pickerInput("chargeTraceXIC", label = "Select Charges", choices = 1:3,
+                   selected = 1:2, multiple = T, options = list(`actions-Box` = T)), hr(),
        
        # Set mass and charge
        uiOutput("massXIC"), uiOutput("chargeXIC")),      
@@ -334,18 +348,18 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
          uiOutput("VPseq"), htmlOutput("VPnsWarn"), hr(), 
          actionButton("VPrseq", "Restore Seq")),
        bsCollapsePanel("2. Set Search Parameters", uiOutput("VPsetparams")),
-       bsCollapsePanel("3. Dynamic Mod Search", uiOutput("VPselect"), 
-         list(actionButton("VPclear", "Clear"), actionButton("VPcommon", "Common PTMs")), hr(), 
-         selectInput("VPmaxmod", "Max Mod per Pep", choices = c("1", "2", "3", "4", "5"), selected = "2"),
-         selectInput("VPmaxpep", "Max Mod per Residue", choices = c("1", "2", "3"), selected = "1"),
+       bsCollapsePanel("3. Dynamic Modification Search", uiOutput("VPselect"), 
+         list(actionButton("VPclear", "Clear"), actionButton("VPcommon", "Autoselect Common Modifications")), hr(), 
+         selectInput("VPmaxmod", "Max Modifications per Pep", choices = c("1", "2", "3", "4", "5"), selected = "2"),
+         selectInput("VPmaxpep", "Max Modifications per Residue", choices = c("1", "2", "3"), selected = "1"),
          actionButton("VPposs", "Calculate")),
-       bsCollapsePanel("4. Manual Mod Search", actionButton("VPspecific", "Manual Search")),
+       bsCollapsePanel("4. Manual Modification Search", actionButton("VPspecific", "Manual Search")),
        bsCollapsePanel("5. Take Snapshot", 
-         actionButton("imgVPSPEC", "Vis PTM Spectra"), HTML("<p></p>"), 
-         actionButton("imgVPHM", "Vis PTM Error Map"), HTML("<p></p>"), 
-         actionButton("imgVPFLAG", "Vis PTM Sequence"), HTML("<p></p>"),
-         actionButton("imgVPPRE", "Vis PTM Previous Precursor"), HTML("<p></p>"),
-         actionButton("imgVPNEXT", "Vis PTM Next Precursor")),
+         actionButton("imgVPSPEC", "Spectra"), 
+         actionButton("imgVPHM", "Error Map"), HTML("<p></p>"), 
+         actionButton("imgVPFLAG", "Sequence"), 
+         actionButton("imgVPPRE", "Previous Precursor"), HTML("<p></p>"),
+         actionButton("imgVPNEXT", "Next Precursor")),
        bsCollapsePanel("6. Export Data", 
          downloadButton("VPcsv", "Export Modifications Data"),
          hr() #downloadButton("VPmarkdown", "Export Markdown")
@@ -412,13 +426,13 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
    navbarMenu("DB Search", 
               
     # This panel allows users to get an ID file if they do not have one with a bottom-up algorithm. 
-    tabPanel("MSGF+",
+    tabPanel("MS-GF+",
      sidebarLayout(sidebarPanel(
        HTML('<p style="text-align: center;"><span style="font-size: 16pt;"><strong>
-             USE MSGF+</strong></span></p>'),
+             Use MS-GF+</strong></span></p>'),
        bsCollapse(multiple = T, open = "1. Run Algorithm",
        bsCollapsePanel("1. Run Algorithm",
-          list(actionButton("BURun", "Run MSGF+"),
+          list(actionButton("BURun", "Run MS-GF+"),
                actionButton("BUgetstatus", "Get Status"))
        ),          
        bsCollapsePanel("2. Upload Parameter File", 
@@ -430,10 +444,10 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
     )))),
 
     # Use MS Path Finder
-    tabPanel("MS Path Finder",
+    tabPanel("MSPathFinder",
        sidebarLayout(sidebarPanel(
          HTML('<p style="text-align: center;"><span style="font-size: 16pt;"><strong>
-             USE MS PATH FINDER</strong></span></p>'),
+             Use MSPathFinder</strong></span></p>'),
          bsCollapse(multiple = T, open = "1. Run Algorithm",
          bsCollapsePanel("1. Run Algorithm",
            list(actionButton("TDRunAll", "Run MSPathFinder"),
@@ -566,7 +580,7 @@ ui <- navbarPage(inverse = T, title = "PSpecteR",
 server <- function(input, output, session) {
   
   # This increases the alotted upload file to 10GB and supresses all warnings
-  options(shiny.maxRequestSize = 10000*1024^2) #warn = -1) 
+  options(shiny.maxRequestSize = 10000*1024^2, warn = -1) 
   
   # Keep track of app start
   appStart <- reactiveValues(start = TRUE)
@@ -576,7 +590,8 @@ server <- function(input, output, session) {
   
   # Keep track of reactive values: testSeq, exporting images and autogenerated PTMS, 
   revals <- reactiveValues(testSeq = NULL, imgData = list(), 
-              PTMs = list(), PTMdf = NULL, PTMmarkdown = F, PTMread = 0)
+              PTMs = list(), PTMdf = NULL, PTMmarkdown = F, PTMread = 0,
+              exportPeakNum = NULL)
   
   # Keep track of specified search PTMs
   search <- reactiveValues(posMod = list())

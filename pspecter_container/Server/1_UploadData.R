@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_10_21
+## Last Updated: 2020_12_28
 
 # DESCRIPTION: Contains the functions necessary to upload files to PSpecteR
 
@@ -199,7 +199,7 @@ list(
   
   # Render Bottom Up Test File Switch
   output$testBUSWITCH <- renderUI({
-    BUTF <- materialSwitch("testBU", label = HTML("<strong>Bottom Up Test Files</strong>"), 
+    BUTF <- materialSwitch("testBU", label = HTML("<strong>Use Bottom Up Test Files</strong>"), 
               value = F, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(BUTF, "Test with bottom up data?",
@@ -225,11 +225,11 @@ list(
   
   # Render "Test RAW" Switch
   output$testTDSWITCH <- renderUI({
-    TDTF <- materialSwitch("testTD", label = HTML("<strong>Top Down Test Files</strong>"), 
+    TDTF <- materialSwitch("testTD", label = HTML("<strong>Use Top Down Test Files</strong>"), 
              value = F, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(TDTF, "Test with top down data?",
-             "Test app with only top down data. Use these files to test MSPathFinderT.",
+             "Test app with only top down data. Use these files to test MSPathFinder.",
              options = list(selector = '.material-switch'), placement = 'right')
     } else {TDTF}
   }),

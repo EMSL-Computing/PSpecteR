@@ -1,23 +1,33 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_10_20
+## Last Updated: 2020_12_30
 
 # DESCRIPTION: Contains the welcome GIF, how to use app GIF, and a link to the manual 
 
 list(
 
-  #############################
-  ## RENDER IMAGES AND LINKS ##
-  #############################
-  
-  # Add Welcome GIF which is stored in the www folder
-  output$WelcomeGIF <- renderImage({
-    list(src = file.path("www", "WelcomeToPSpecteR.gif"), contentType = "image/gif",
-        width = "204px", height = "100px", align = "left")}, deleteFile = F),
+  ###########################
+  ## RENDER LINKS AND TEXT ##
+  ###########################
 
-  # Add "How to Use App" PNG which is stored in the www folder
-  output$WelcomePNG <-  renderImage({
-    list(src = file.path("www", "PSpecteR_Intro_Graphic.png"), contentType = "image/png",
-          width = "572px", height = "350px", align = "left")}, deleteFile = F), 
+  # Render welcome image clicks
+  shinyjs::onclick("Page1",
+    updateTabsetPanel(session = session, inputId = "mainTabs", selected = "1. Upload") 
+  ),
+  shinyjs::onclick("Page2",
+    updateTabsetPanel(session = session, inputId = "mainTabs", selected = "2. MS & XIC") 
+  ),
+  shinyjs::onclick("Page3",
+    updateTabsetPanel(session = session, inputId = "mainTabs", selected = "3. Vis PTM") 
+  ),
+  shinyjs::onclick("Page4",
+    updateTabsetPanel(session = session, inputId = "mainTabs", selected = "4. Protein Coverage") 
+  ),
+  shinyjs::onclick("Page5",
+    updateTabsetPanel(session = session, inputId = "mainTabs", selected = "MS-GF+") 
+  ),
+  shinyjs::onclick("Page6",
+    updateTabsetPanel(session = session, inputId = "mainTabs", selected = "A. Spectra Metadata") 
+  ),
 
   # Add link to the user manual 
   output$manual <- renderUI({
@@ -27,7 +37,9 @@ list(
   
   # Add html output
   output$citation <- renderText({
-    HTML("<p><strong>Please cite:&nbsp;</strong>Degnan et al. 2020</p>")
+    HTML('<p><strong>Please cite:&nbsp;</strong>Degnan et al. 2020</p>
+          <p><strong><span style="font-size: 22px;">FIRST TIME USERS:&nbsp;</span></strong><span style="font-size: 22px;">
+          Please enable &quot;Description Mode&quot; under &quot;App Settings&quot; on the Uploads Page.&nbsp;</span></p>')
   })
 
 )

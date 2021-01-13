@@ -684,9 +684,13 @@ list(
     if (MS.Level == 1) {return(NULL)}
     
     # If no window, return null
-    window <- getPrecursorWindow()
+    window <- input$MPwinsize
     if (is.null(window)) {return(NULL)}
+    if (window == 0) {window <- 5} 
     
+    # Get the number of peaks on either side of the spectra to plot
+    NumPeaks <- abs(as.integer(input$MPpeaks))
+
     # Get scan number, peak information based on window size, and pre mz
     scanNum <- getScan()[getScanClick(), "Scan.Num"]
     PreScanNum <- getScan()[getScanClick(), "Pre.Scan"]
@@ -747,8 +751,7 @@ list(
     if (MS.Level == 1) {return(NULL)}
     
     # If no window, return null
-    window <- getPrecursorWindow()
-    if (is.null(window)) {return(NULL)}
+    NumPeaks <- abs(as.integer(input$MPpeaks))
     
     # Get all Ms1 scans and if none, return null
     AllMs1 <- getAllMs1()
@@ -760,6 +763,11 @@ list(
     NextScanNum <- getAllMs1()[NextScanNumPos]
     if (is.na(NextScanNum) || NextScanNum == 0) {return(NULL)}
     Pre.MZ <- getScan()[getScanClick(), "Pre.MZ"]
+    
+    # If no window, return null
+    window <- input$MPwinsize
+    if (is.null(window)) {return(NULL)}
+    if (window == 0) {window <- 5} 
     
     # Get range
     MatchedPre <- peakDataRange(NextScanNum, Pre.MZ, window)

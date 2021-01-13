@@ -140,7 +140,7 @@ list(
     
     plots$currSM <- SM
   
-    SM
+    plotly::toWebGL(SM)
       
   })
 

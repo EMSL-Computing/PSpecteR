@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_06_29
+## Last Updated: 2020_12_29
 
 # DESCRIPTION: Contains code to generate precursor plots in 2. Scan & Seq
 
@@ -83,7 +83,7 @@ list(
 
     plots$currMPPRE <- P %>% layout(xaxis = list(title = "M/Z"))
     
-    P
+    plotly::toWebGL(P)
   }),
   
   # Generates the matched precursor graphic for the next MS1 scan
@@ -138,14 +138,14 @@ list(
     
     plots$currMPNEXT <- P %>% layout(xaxis = list(title = "M/Z"))
     
-    P
+    plotly::toWebGL(P)
 
   }),
    
   # Plot new previous precursor
-  output$bigMPLP <- renderPlotly({plots$currMPPRE}),
+  output$bigMPLP <- renderPlotly({plotly::toWebGL(plots$currMPPRE)}),
   
   # Plot new previous precursor
-  output$bigMPNP <- renderPlotly({plots$currMPNEXT})
+  output$bigMPNP <- renderPlotly({plotly::toWebGL(plots$currMPNEXT)})
   
 )

@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_07_14
+## Last Updated: 2020_12_30
 
 # DESCRIPTION: Generates the error map for 2. Scan & Seq
 

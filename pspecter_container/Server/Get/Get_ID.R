@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_07_14
+## Last Updated: 2020_12_29
 
 # DESCRIPTION: This contains the get functions which are directly related to the ID file:
 # getIsoPerMin, getIsoPeaks, getID, getModDF, getModPerSeq, getFrag, getOriSDF,
@@ -536,7 +536,9 @@ list(
   
     # Determine if there are only NA values for Q Value 
     if (FALSE %in% unique(is.na(PTscan$Q.Value))) {
-      PTscan <- PTscan[PTscan$Q.Value <= input$PTTolerance,]
+      tol <- input$PTTolerance
+      if (is.null(tol) || is.na(tol)) {tol <- 0}
+      PTscan <- PTscan[PTscan$Q.Value <= abs(tol),]
     }
     PTscan <- PTscan[!is.na(PTscan$Protein.ID),] 
     return(PTscan)

@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_10_20
+## Last Updated: 2020_12_28
 
 # DESCRIPTION: This contains all the popover information for graphs and input widgets.
 
@@ -7,10 +7,10 @@ list(
 
 # The pop up which describes pop up mode remains on at all times
 output$infoSWITCH <- renderUI({
-    popify(shinyWidgets::materialSwitch("infoMode", label = HTML('<strong>Description Mode?</strong>'),
+    popify(shinyWidgets::materialSwitch("infoMode", label = HTML('<strong>Enable Description Mode</strong>'),
                value = F, status = "success"),
            "Description Mode",
-           "Turn on this switch to enable description boxes (like this one) for every input and output in PSpecteR. Recommended for beginners.",
+           "Turn on this switch to enable description boxes (like this one) for every input and output in PSpecteR. Recommended for new app users.",
            options = list(selector = '.material-switch'), placement = 'right')
 }),
 

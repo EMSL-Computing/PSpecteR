@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_09_21
+## Last Updated: 2020_12_29
 
 # DESCRIPTION: Uploads data and visualizes output from MS Path Finder's ProMex
 
@@ -160,7 +160,7 @@ list(
               "Color", "ProteinName", "Grouping")) %>% group_by(Grouping)
 
     # Define the legend title image (will only work in Shiny app)
-    image <-  list(list(source = paste("data:image/png;base64,", 
+    image <- list(list(source = paste("data:image/png;base64,", 
                 base64enc::base64encode(file.path("www", "Abundance_Scale.png")), sep = ""), 
                 xref = "paper", yref = "paper", x = 0.9, y = 1, sizex = 0.5, sizey = 0.5, 
                 opacity = 0.6, layer = "above"))
@@ -179,7 +179,7 @@ list(
     # Store the current plot
     plots$currPMFM <- p
     
-    p
+    plotly::toWebGL(p)
 
   }),
   
