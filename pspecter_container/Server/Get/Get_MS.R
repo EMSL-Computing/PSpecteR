@@ -225,7 +225,7 @@ list(
       XIC <- readXICs(msPath(), adjMZ, tol = input$tolXIC)
       
       # Create labels vector
-      labels <- expand.grid(paste0("[M+", input$isoXIC, "]<sup>"), 
+      labels <- expand.grid(paste0("[M+", input$isoXIC, "]<sup>+"), 
                             paste0(input$chargeTraceXIC, "</sup>"))
       labels <- paste0(labels$Var1, labels$Var2)
       labels <- sort(labels)
@@ -353,8 +353,8 @@ list(
       # Return dataframe with zeroes around peaks
       if (nrow(peak) == 0) {return(NULL)} else {
         peak <- data.frame(do.call(rbind, lapply(1:nrow(peak), function(row) {
-          rbind(c(mz = peak$mz[row] - 1e-9, int = 0), c(mz = peak$mz[row], int = peak$int[row]),
-                c(mz = peak$mz[row] + 1e-9, int = 0))})))
+          rbind(c(mz = peak$mz[row] - 1e-12, int = 0), c(mz = peak$mz[row], int = peak$int[row]),
+                c(mz = peak$mz[row] + 1e-12, int = 0))})))
       return(peak)}}
   },
   # Get scan data for specified region

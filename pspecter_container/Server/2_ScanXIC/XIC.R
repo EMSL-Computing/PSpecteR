@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_12_29
+## Last Updated: 2021_02_15
 
 # DESCRIPTION: Contains all XIC functions
 
@@ -41,7 +41,7 @@ list(
       clicked <- getScanClick()
       mass <- scan[clicked, "Pre.MZ"]
     }
-    PM <- numericInput("premzXIC", "MZ", mass)
+    PM <- numericInput("premzXIC", HTML("<p><em>m/z</em></p>"), mass)
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(PM, Desc[Desc$Name == "premzXIC", "Title"], Desc[Desc$Name == "premzXIC", "Description"])
     } else {PM}
