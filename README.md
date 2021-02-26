@@ -27,3 +27,7 @@ You may also run the pspecter_container by itself, but note that MS-GF+ and MSPa
 `cd /path/to/pspecter_container`
 
 `docker run -v ${PWD}:/data --rm -p 3838:3838 pspecter:1.0.0`
+
+### USER'S MANUAL
+
+A complete user's manual for PSpecteR can be found here: https://htmlpreview.github.io/?https://github.com/EMSL-Computing/PSpecteR/blob/master/pspecter_container/www/PSpecteR_Manual_ver1_0_0.html
