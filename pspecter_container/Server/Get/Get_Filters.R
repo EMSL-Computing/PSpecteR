@@ -45,6 +45,12 @@ list(
     if (AM == "HCD") {Ions <- c("b", "y", "Spec")} else 
     if (AM == "CID") {Ions <- c("a", "b", "y", "Spec")} else
     if (AM == "ETD") {Ions <- c("b", "c", "y", "z", "Spec")} 
+    
+    # Include added ions if they exist
+    if (is.null(revals$AddedIons) == F) {
+      Ions <- c(Ions, paste0(revals$AddedIons$Ion, revals$AddedIons$Annotation))
+    }
+    
     return(Ions)
     
   }),

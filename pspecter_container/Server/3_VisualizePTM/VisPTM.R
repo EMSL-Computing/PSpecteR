@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_12_29
+## Last Updated: 2021_03_28
 
 # DESCRIPTION: Contains the table and spectra for Vis PTM
 
@@ -122,7 +122,7 @@ list(
       scanNum <- scan[getScanClick(), "Scan.Num"]
       
       # Get theoretical fragment data
-      frag <- getCalcFrag(seq, input$ ionGroups, 1:scan[scan$Scan.Num == scanNum, "Pre.Charge"])
+      frag <- getCalcFrag(seq, input$ionGroups, 1:scan[scan$Scan.Num == scanNum, "Pre.Charge"], revals$AddedIons)
       
       incProgress(amount = 0.5, "Acquiring Modification Data")
       
@@ -557,6 +557,11 @@ list(
     # Add missing data 
     spectra$ion <- spectra$type <- spectra$z <- spectra$isoPeak <- NA
     
+    # If frag exists, removes fragment associated peaks
+    if (is.null(frag) == F) {
+      spectra <- spectra[spectra$mz %in% frag$mzExp == F,]
+    }
+    
     # Plot spectra
     p <- plot_ly(x = spectra$mzExp, y = spectra$intensityExp, type = "scatter",
                  mode = "lines+markers", line = list(color = "black"), 
@@ -579,7 +584,7 @@ list(
       frag <- frag[,c("mzExp", "intensityExp", "ion", "type", "z", "isoPeak")]
       
       for (type in c("a", "b", "c", "x", "y", "z")) {
-        fragSub <- frag[frag$type == type,]
+        fragSub <- frag[substr(frag$type, 1, 1) == type,]
         len <- nrow(fragSub)
         spectraAnno <- data.frame("mzExp" = c(fragSub$mzExp - 1e-9, fragSub$mzExp, fragSub$mzExp + 1e-9),
                                   "intensityExp" = c(rep(0, len), fragSub$intensityExp, rep(0, len)),
@@ -587,11 +592,11 @@ list(
                                   "isoPeak" = rep(fragSub$isoPeak, 3))
         spectraAnno <- spectraAnno[order(spectraAnno$mzExp),]
         p <- add_trace(p, x = spectraAnno$mzExp, y = spectraAnno$intensity, type = "scatter",
-                       mode = "lines+markers", line = list(color = colors[type]), 
+                       mode = "lines+markers", line = list(color = colors[substr(type, 1, 1)]), 
                        name = type, marker = list(opacity = 0), 
                        hoverinfo = "text", hovertext = paste(paste("Ion: ", spectraAnno$ion, 
-                                                                   "<sup>", spectraAnno$z, "</sup> ", spectraAnno$isoPeak, sep = ""), "<br>MZ:",
-                                                             round(spectraAnno$mzExp, 3), "<br>Int:", round(spectraAnno$intensity, 0)))
+                       "<sup>", spectraAnno$z, "</sup> ", spectraAnno$isoPeak, sep = ""), "<br>MZ:",
+                      round(spectraAnno$mzExp, 3), "<br>Int:", round(spectraAnno$intensity, 0)))
           
           # Add labels if enabled
           if (is.null(input$ssLetter) == F && input$ssLetter == T & is.null(getFrag()) == F

@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2021_01_07
+## Last Updated: 2021_03_26
 
 # DESCRIPTION: Generates Scan & Seq plots not isolated in the other scripts
 
@@ -15,6 +15,43 @@ list(
   ###############
   ## OBSERVERS ##
   ###############
+  
+  # Add an ion if the button is clicked
+  observeEvent(input$AddIonSubmit, {
+    
+    # Send a warning if the mass spectra difference is more than 1000 and do nothing
+    if (abs(input$AddIonWeight) > 1000) {
+      sendSweetAlert(session, "Add Ion Warning", 
+        "PSpecteR does not currently accept modified weights of > 1000 or < 1000.", "warning")
+      return(NULL)
+    }
+    
+    # Update data table created by iterating through all ions and making a table
+    revals$AddedIons <- rbind(revals$AddedIons, 
+      data.table("Ion" = input$AddIonSelect, "Annotation" = input$AddIonAnnotation, 
+        "AMU Change" = input$AddIonWeight)
+    )
+    
+  }),
+  
+  # Remove an ion if the button is clicked
+  observeEvent(input$RemoveIonSubmit, {
+    
+    # Get selected row
+    row <- input$AddIonTable_row_last_clicked
+    
+    # If null, send a sweet alert 
+    if (is.null(row)) {
+      sendSweetAlert(session, "Modified Ion Removal Error", 
+        "Please select a row in the table to remove an ion. If there is no table, there are no modified ions.",
+      "error")
+      return(NULL)
+    }
+    
+    # Remove ion
+    revals$AddedIons <- revals$AddedIons[-row,]
+    
+  }),
   
   # Restore sequence for 2. Scan & Seq when this button is clicked
   observeEvent(input$ssRSeq, {
@@ -41,6 +78,27 @@ list(
   observeEvent(input$ssSpecNewINT, {
     updateSliderInput(session, "ssSpecY", value = c(input$ssIntMin,
      input$ssIntMax))
+  }),
+  
+  ######################
+  ## OBSERVER POP UPS ##
+  ######################
+  
+  # Trigger "Add Ions" modal  
+  observeEvent(input$ManageIons, {
+    showModal(modalDialog(fluidPage(
+      column(4, selectInput("AddIonSelect", "Select Ion to Modify", c("a", "b", "c", "x", "y", "z"), "z")),
+      column(4, selectInput("AddIonAnnotation", "Choose Annotation Symbol", 
+        c("'", "''", "*", "**", "(-1)", "(+1)", "(-2)", "(+2)"), "'")),
+      column(4, numericInput("AddIonWeight", "Add Weight Change in AMU", 1.007825)),
+      column(12, hr()),
+      column(12, DT::dataTableOutput("AddIonTable"))),
+      title = HTML('<p style="text-align: center;">Manage Modified Ions</p>'),
+      footer = list(actionButton("AddIonSubmit", "Add Ion", icon = icon("plus")), 
+        actionButton("RemoveIonSubmit", "Remove Ion", icon = icon("minus")),            
+        modalButton("Exit")),
+      size = "m", easyClose = T
+    ))
   }),
   
   # Make spectra full screen
@@ -114,8 +172,8 @@ list(
   output$SelectedIons <- renderUI({
     
     # Set variable to contain the checkbox information 
-    selectIonUI <- selectInput("ionGroups", "Fragment Type", c("a" = "a", "b" = "b", 
-      "c" = "c", "x" = "x", "y" = "y", "z"= "z"), selected = getActMetIon(), multiple = T)
+    selectIonUI <- selectInput("ionGroups", "Ion Type", c("a", "b", "c", "x", "y", "z",
+      paste0(revals$AddedIons$Ion, revals$AddedIons$Annotation)), selected = getActMetIon(), multiple = T)
     
     # Show pop up box if pop-ups are enabled
     if (is.null(input$infoMode) == F && input$infoMode == T) {
@@ -212,6 +270,11 @@ list(
     # Add missing data 
     spectra$ion <- spectra$type <- spectra$z <- spectra$isoPeak <- NA
     
+    # If frag exists, removes fragment associated peaks
+    if (is.null(frag) == F) {
+      spectra <- spectra[spectra$mz %in% frag$mzExp == F,]
+    }
+    
     # Plot spectra
     p <- plot_ly(x = spectra$mzExp, y = spectra$intensityExp, type = "scatter",
                  mode = "lines+markers", line = list(color = "black"), 
@@ -234,15 +297,15 @@ list(
     frag <- frag[,c("mzExp", "intensityExp", "ion", "type", "z", "isoPeak")]
     
     for (type in c("a", "b", "c", "x", "y", "z")) {
-      fragSub <- frag[frag$type == type,]
+      fragSub <- frag[substr(frag$type, 1, 1) == type,]
       len <- nrow(fragSub)
       spectraAnno <- data.frame("mzExp" = c(fragSub$mzExp - 1e-9, fragSub$mzExp, fragSub$mzExp + 1e-9),
-                    "intensityExp" = c(rep(0, len), fragSub$intensityExp, rep(0, len)),
-                    "ion" = rep(fragSub$ion, 3), "z" = rep(fragSub$z, 3), 
-                    "isoPeak" = rep(fragSub$isoPeak, 3))
+                      "intensityExp" = c(rep(0, len), fragSub$intensityExp, rep(0, len)),
+                      "ion" = rep(fragSub$ion, 3), "z" = rep(fragSub$z, 3), 
+                      "isoPeak" = rep(fragSub$isoPeak, 3))
       spectraAnno <- spectraAnno[order(spectraAnno$mzExp),]
       p <- add_trace(p, x = spectraAnno$mzExp, y = spectraAnno$intensity, type = "scatter",
-                     mode = "lines+markers", line = list(color = colors[type]), 
+                     mode = "lines+markers", line = list(color = colors[substr(type, 1, 1)]), 
                      name = type, marker = list(opacity = 0), 
                      hoverinfo = "text", hovertext = paste(paste("Ion: ", spectraAnno$ion, 
                      "<sup>", spectraAnno$z, "</sup> ", spectraAnno$isoPeak, sep = ""), "<br>MZ:",
@@ -406,7 +469,7 @@ list(
     # Top/bottom lines
     for (i in 1:nrow(flagData)) {
       line <- list(type = "line", line = list(color = flagData$Color[i]), xref = "x", yref = "y")
-      if (flagData$Type[i] %in% c("a", "b", "c")) {
+      if (flagData$Type[i] %>% substr(1, 1) %in% c("a", "b", "c")) {
         line[["x0"]] <- flagData$X[i] + 0.45
         line[c("y0","y1")] <- flagData$Y[i] - 0.45
         line[["x1"]] <- flagData$X[i] - 0.45} else{
@@ -418,7 +481,7 @@ list(
     # Side lines
     for (i in 1:nrow(flagData)) {
       line <- list(type = "line", line = list(color = flagData$Color[i]), xref = "x", yref = "y")
-      if (flagData$Type[i] %in% c("a", "b", "c")) {
+      if (flagData$Type[i] %>% substr(1, 1) %in% c("a", "b", "c")) {
         line[c("x0", "x1")] <- flagData$X[i] + 0.45
         line[["y0"]] <- flagData$Y[i] - 0.45
         line[["y1"]] <- flagData$Y[i] - 0.1} else{
@@ -441,7 +504,7 @@ list(
     # abc or xyz. 
     ypos <- c()
     for (i in 1:nrow(flagData)) {
-      if (flagData$Type[i] %in% c("a", "b", "c")) {ypos[i] <- flagData$Y[i] - 0.3} else {
+      if (flagData$Type[i] %>% substr(1, 1) %in% c("a", "b", "c")) {ypos[i] <- flagData$Y[i] - 0.3} else {
         ypos[i] <- flagData$Y[i] + 0.3}}
     
     # Update x and y values to fit the data
@@ -504,6 +567,20 @@ list(
     if (nchar(Nseq) < 2) {paste("Sequence must have > 1 amino acid")} else
     if (grepl("[BbJjOoUuXxZz]", Nseq)) {paste("B, J, O, U, X, Z are incorrect options")} else
       {paste("Acceptable sequence")}
+  }), 
+  
+  
+  # Output add ion render datatable
+  output$AddIonTable <- DT::renderDataTable({
+    
+    # Return NULL if no added ions
+    if (is.null(revals$AddedIons)) {return(NULL)}
+  
+    # Render datatable
+    datatable(revals$AddedIons, selection = list(mode = 'single'), rownames = F, filter = 'none', 
+              options = list(pageLength = 10), escape = F)
+    
+    
   })
   
 )

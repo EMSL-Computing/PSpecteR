@@ -248,9 +248,12 @@ list(
     isoFilter <- input$ssIsoPerMin / 100
     corrScore <- input$ssCorrScoreFilter
     
+    # Get user added fragments
+    AddedIons <- revals$AddedIons
+    
     # 1. Get Calc Frag
     if (is.null(seq) || is.na(seq)) {return(NULL)}
-    frag <- getCalcFrag(seq, ionGroups, charge)
+    frag <- getCalcFrag(seq, ionGroups, charge, AddedIons)
     if (is.null(frag)) {return(NULL)}
     
     # 2. Add Mod Mass
@@ -361,12 +364,19 @@ list(
     # to make plotting the sequence with flags easy. 
     if (length(frag$ion) == 0) {return(NULL)}
     
-    # Generate Flag Dataframe
-    flagData <- data.frame(as.numeric(gsub("\\D", "", frag$ion)), frag$type, frag$npos, 
-                           paste(lapply(strsplit(as.character(frag$z), " "), 
-                                        function(el) el[1]) %>% unlist(), "+", sep = ""), 
-                           frag$error, frag$type, frag$type)
-    colnames(flagData) <- c("Ion", "Type", "Position", "z", "MatchScore", "Color", "Rank")
+    # Generate Flag Dataframex
+    flagData <- data.frame(
+      "Ion" = gsub("\\s*\\([^\\)]+\\)", "", frag$ion) %>% gsub(pattern = "\\D", replacement = "") %>% as.numeric(),
+      "Type" = frag$type, "Position" = frag$npos, 
+      "z" = paste(lapply(strsplit(as.character(frag$z), " "), function(el) el[1]) 
+         %>% unlist(), "+", sep = ""), 
+      "MatchScore" = frag$error, "Color" = frag$type %>% substr(1, 1), 
+      "Rank" = frag$type %>% substr(1, 1)
+    )
+    
+    # Make color and Rank a factor variable
+    flagData$Color <- as.factor(flagData$Color)
+    flagData$Rank <- as.factor(flagData$Rank)
     
     # Change frag types to colors for easy plotting later
     levels(flagData$Color)[levels(flagData$Color) == "a"] <- "forestgreen"
@@ -554,8 +564,7 @@ list(
     if (is.null(ID) | is.null(PTscan)) {return(NULL)}
     
     # Create PTID data which summarizes PTscan
-    PTID <- data.frame(summary(PTscan$Protein.ID, maxsum = 1e8))
-    PTID <- data.frame(rownames(PTID), PTID)
+    PTID <- table(PTscan$Protein.ID) %>% data.frame()
     colnames(PTID) <- c("Protein.ID", "Number.Of.Peptides")
     PTID <- PTID[PTID$Number.Of.Peptides > 0,]
     PTID <- unique(PTID[order(PTID$Number.Of.Peptides, decreasing = T),])

@@ -78,7 +78,7 @@ list(
     # Top/bottom lines
     for (i in 1:nrow(flagData)) {
       line <- list(type = "line", line = list(color = flagData$Color[i]), xref = "x", yref = "y")
-      if (flagData$Type[i] %in% c("a", "b", "c")) {
+      if (flagData$Type[i] %>% substr(1, 1) %in% c("a", "b", "c")) {
         line[["x0"]] <- flagData$X[i] + 0.45
         line[c("y0","y1")] <- flagData$Y[i] - 0.45
         line[["x1"]] <- flagData$X[i] - 0.45} else{
@@ -90,7 +90,7 @@ list(
     # Side lines
     for (i in 1:nrow(flagData)) {
       line <- list(type = "line", line = list(color = flagData$Color[i]), xref = "x", yref = "y")
-      if (flagData$Type[i] %in% c("a", "b", "c")) {
+      if (flagData$Type[i] %>% substr(1, 1) %in% c("a", "b", "c")) {
         line[c("x0", "x1")] <- flagData$X[i] + 0.45
         line[["y0"]] <- flagData$Y[i] - 0.45
         line[["y1"]] <- flagData$Y[i] - 0.1} else{
@@ -113,7 +113,7 @@ list(
     # abc or xyz. 
     ypos <- c()
     for (i in 1:nrow(flagData)) {
-      if (flagData$Type[i] %in% c("a", "b", "c")) {ypos[i] <- flagData$Y[i] - 0.3} else {
+      if (flagData$Type[i] %>% substr(1, 1) %in% c("a", "b", "c")) {ypos[i] <- flagData$Y[i] - 0.3} else {
         ypos[i] <- flagData$Y[i] + 0.3}}
     
     # Update x and y values to fit the data

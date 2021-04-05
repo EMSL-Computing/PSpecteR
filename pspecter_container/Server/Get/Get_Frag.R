@@ -10,13 +10,16 @@ list(
 # Inputs: seq (new seq), ionGroups, charge
 # Function: Use calculateFragments (MSnbase) with other code to clean output
 # Outputs: Fragment data: mz, ion, type, pos, z, seq, npos
-getCalcFrag <- function(seq, ionGroups, charge) {
+getCalcFrag <- function(seq, ionGroups, charge, AddedIons) {
   
   # If there is no sequence data, return NULL
-  if (is.na(seq)) {return(NULL)}
+  if (is.na(seq) || is.null(ionGroups) || length(ionGroups) == 0) {return(NULL)}
+  
+  # Unique ion groups
+  uniqueIons <- ionGroups %>% substr(1, 1) %>% unique()
   
   # Calculate fragment data with MSnbase 
-  frag <- calculateFragments(sequence = seq, type = ionGroups, z = charge)
+  frag <- calculateFragments(sequence = seq, type = uniqueIons, z = charge)
   
   # Exclude N-deamidated and C-dehydrated specific modifications
   frag <- filter(frag, !grepl("[.*_]", frag$type))
@@ -26,8 +29,44 @@ getCalcFrag <- function(seq, ionGroups, charge) {
     
     # Change position values to be the same direction
     frag$npos <- lapply(1:nrow(frag), function(i) {
-      if (frag$type[i] %in% c("x", "y", "z")) {
-        (nchar(seq) + 1) - frag$pos[i]} else {frag$pos[i]}}) %>% unlist()
+      if (frag$type[i] %in% c("x", "y", "z")) {(nchar(seq) + 1) - frag$pos[i]} 
+      else {frag$pos[i]}}
+    ) %>% unlist()
+    
+  }
+  
+  # Apply unique added modifications if applicable
+  if (is.null(AddedIons) == F && nrow(AddedIons) > 0) {
+    
+    # Add all new ion types
+    NewIons <- do.call(rbind, lapply(1:nrow(AddedIons), function(row) {
+      
+      # Pull the general ion type (a-c, x-z), the new ion type name with the annotation,
+      # and the mass change
+      ionQuery <- AddedIons[row, "Ion"] %>% unlist()
+      ionName <- paste0(ionQuery, AddedIons[row, "Annotation"] %>% unlist())
+      massChange <- AddedIons[row, "AMU Change"] %>% unlist()
+      
+      # Pull all potential ions for the general type, and modify for the new ion type
+      subFrag <- frag[frag$type == ionQuery,]
+      
+      # If sub frag has no rows, return null
+      if (nrow(subFrag) < 1) {return(NULL)}
+      
+      # Otherwise, update ions 
+      subFrag$type <- ionName
+      subFrag$ion <- paste0(subFrag$type, subFrag$pos)
+      subFrag$mz <- subFrag$mz + (massChange / subFrag$z)
+      return(subFrag)
+      
+    }))
+    
+    # Merge New Ions with frag
+    frag <- rbind(frag, NewIons)
+    
+    # Filter out any non-requested ions
+    frag <- frag[frag$type %in% ionGroups,]
+    
   }
   
   return(frag)
@@ -91,11 +130,11 @@ applyMod <- function(modMass, frag) {
   data.frame(do.call(rbind, lapply(1:nrow(frag), function(row) {
     theoPeak <- frag[row,]
     
-    if (theoPeak$type %in% c("a", "b", "c")) {
+    if (theoPeak$type %>% substr(1,1) %in% c("a", "b", "c")) {
       theoPeak$mz <- theoPeak$mz + (modMass$abcMass[theoPeak$pos] / theoPeak$z)
       theoPeak$molForm <- modMass$abcForm[theoPeak$pos]
     }
-    if (theoPeak$type %in% c("x", "y", "z")) {
+    if (theoPeak$type %>% substr(1,1) %in% c("x", "y", "z")) {
       theoPeak$mz <- theoPeak$mz + (modMass$xyzMass[theoPeak$pos] / theoPeak$z)
       theoPeak$molForm <- modMass$xyzForm[theoPeak$pos]
     }
@@ -160,7 +199,7 @@ getMolecularFormula <- function(frag) {
   
   # Adjust the literature molecular formula for fragmentation and modifications
   MolForm <- do.call(rbind, lapply(1:nrow(frag), function(row) {
-    fragForm <- adjustForFragType(frag$type[row], frag$seq[row])
+    fragForm <- adjustForFragType(frag$type[row] %>% substr(1, 1), frag$seq[row])
     modForm <- stringToList(frag$molForm[row])
     return(addAtoms(fragForm, modForm))
   }))

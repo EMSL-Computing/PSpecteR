@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_12_28
+## Last Updated: 2021_04_01
 
 # DESCRIPTION: Contains the functions necessary to upload files to PSpecteR
 
@@ -214,6 +214,9 @@ list(
       msPath(file.path("/data", "data", "TestFiles", "BottomUp", "BottomUp.mzML"))
       idPath(file.path("/data", "data", "TestFiles", "BottomUp", "BottomUp.mzid"))
       fastaPath(file.path("/data", "data", "TestFiles", "QC_Shew.fasta"))
+      #msPath("./data/TestFiles/BottomUp/BottomUp.mzML")
+      #idPath("./data/TestFiles/BottomUp/BottomUp.mzid")
+      #fastaPath("./data/TestFiles/QC_Shew.fasta")
       disable("testTD")
     } else {
       msPath(NULL)

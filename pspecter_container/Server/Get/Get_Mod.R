@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_06_15
+## Last Updated: 2021_03_28
 
 # DESCRIPTION: This contains the Visualize Modifications Getters: 
 # getNewVSeq, getModTable, getModSeq, getVPClick, getVPMetrics, buildModDF,
@@ -213,7 +213,7 @@ list(
         if (is.null(ionGroups)) {ionGroups <- c("a", "b", "c", "x", "y", "z", "Spec")}
         mztolppm <- input$ssTolerance
         intFilter <- input$ssIsoPerMin / 100
-        frag <- getCalcFrag(seq, ionGroups, 1:getScan()[getScanClick(), "Pre.Charge"])
+        frag <- getCalcFrag(seq, ionGroups, 1:getScan()[getScanClick(), "Pre.Charge"], revals$AddedIons)
         if (is.null(frag)) {return(NULL)}
         modMass <- addModMass(mod, frag, scanNum, seq, Glossary)
         frag <- applyMod(modMass, frag)
@@ -371,9 +371,12 @@ list(
     if (is.null(ionGroups)) {ionGroups <- c("a", "b", "c", "x", "y", "z", "Spec")}
     mztolppm <- input$ssTolerance
     intFilter <- input$ssIsoPerMin / 100
+    
+    # Get user added fragments
+    AddedIons <- revals$AddedIons
   
     # Run get frag pipeline and return results
-    frag <- getCalcFrag(seq, ionGroups, charge)
+    frag <- getCalcFrag(seq, ionGroups, charge, AddedIons)
     if (is.null(frag)) {return(NULL)}
     modMass <- addModMass(mod, frag, scanNum, seq, Glossary)
     frag <- applyMod(modMass, frag)
@@ -440,7 +443,7 @@ list(
       intFilter <- input$ssIsoPerMin / 100
       
       # Run get frag pipeline and return results
-      frag <- getCalcFrag(seq, ionGroups, charge)
+      frag <- getCalcFrag(seq, ionGroups, charge, revals$AddedIons)
       if (is.null(frag)) {return(NULL)}
       modMass <- addModMass(mod, frag, scanNum, seq, Glossary)
       frag <- applyMod(modMass, frag)
@@ -514,11 +517,18 @@ list(
     if (length(frag$ion) == 0) {return(NULL)}
     
     # Generate Flag Dataframe
-    flagData <- data.frame(as.numeric(gsub("\\D", "", frag$ion)), frag$type, frag$npos, 
-                           paste(lapply(strsplit(as.character(frag$z), " "), 
-                                        function(el) el[1]) %>% unlist(), "+", sep = ""), 
-                           frag$error, frag$type, frag$type)
-    colnames(flagData) <- c("Ion", "Type", "Position", "z", "MatchScore", "Color", "Rank")
+    flagData <- data.frame(
+      "Ion" = gsub("\\s*\\([^\\)]+\\)", "", frag$ion) %>% gsub(pattern = "\\D", replacement = "") %>% as.numeric(),
+      "Type" = frag$type, "Position" = frag$npos, 
+      "z" = paste(lapply(strsplit(as.character(frag$z), " "), function(el) el[1]) 
+                  %>% unlist(), "+", sep = ""), 
+      "MatchScore" = frag$error, "Color" = frag$type %>% substr(1, 1), 
+      "Rank" = frag$type %>% substr(1, 1)
+    )
+    
+    # Make color and Rank a factor variable
+    flagData$Color <- as.factor(flagData$Color)
+    flagData$Rank <- as.factor(flagData$Rank)
     
     # Change frag types to colors for easy plotting later
     levels(flagData$Color)[levels(flagData$Color) == "a"] <- "forestgreen"
