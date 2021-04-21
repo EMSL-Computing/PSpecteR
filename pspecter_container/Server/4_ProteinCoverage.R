@@ -144,7 +144,7 @@ list(
     req(getProteinTree(), getPTID())
     PT <- getProteinTree()
     PTID <- getPTID()
-
+    
     # Get clicked row
     clicked <- input$PTTable_row_last_clicked
     if (is.null(clicked)) {clicked = 1}

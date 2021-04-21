@@ -1,7 +1,7 @@
 ################################################################################
 ################### PSpecteR, a proteomics QC Shiny App ########################
 ########### David Degnan, Pacific Northwest National Laboratory ################
-####################### Last Updated: 2021_04_01 ###############################
+####################### Last Updated: 2021_04_21 ###############################
 ################################################################################
 
 # Load the package for Shiny App infrastructure
@@ -37,8 +37,8 @@ library(plotly)
 library(DT)
 
 # If the test files are not in the right directory, copy and move them 
-source(file.path("Server", "PrepTestFiles.R"), local = T)$value
-prepTestFiles()
+#source(file.path("Server", "PrepTestFiles.R"), local = T)$value
+#prepTestFiles()
 
 # Define function to render images in ui
 imgRender <- function(id, path, width, height) {

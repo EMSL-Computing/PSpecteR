@@ -137,7 +137,8 @@ list(
   # Load test file for PromMex Feature Map
   observeEvent(input$testMS1FT, {
     if (input$testMS1FT == T) {
-      ms1ftPath(file.path("/data", "data", "TestFiles", "TopDown", "TopDown.ms1ft"))}
+      #ms1ftPath(file.path("/data", "data", "TestFiles", "TopDown", "TopDown.ms1ft"))}
+      ms1ftPath("./data/TestFiles/TopDown/TopDown.ms1ft")}
   }),
   
   # Plot ProMex Feature Map

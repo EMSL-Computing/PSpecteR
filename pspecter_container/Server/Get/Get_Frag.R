@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_05_11
+## Last Updated: 2021_04_21
 
 # DESCROPTION: Gets the getters used by getFrag: getCalcFrag, addModMass, 
 # applyMod, getMolecularFormula, and getCalcIso, getAnnotatedPeaks, and getCorrelationScore.
@@ -10,7 +10,7 @@ list(
 # Inputs: seq (new seq), ionGroups, charge
 # Function: Use calculateFragments (MSnbase) with other code to clean output
 # Outputs: Fragment data: mz, ion, type, pos, z, seq, npos
-getCalcFrag <- function(seq, ionGroups, charge, AddedIons) {
+getCalcFrag <- function(seq, ionGroups, charge, AddedIons = revals$AddedIons) {
   
   # If there is no sequence data, return NULL
   if (is.na(seq) || is.null(ionGroups) || length(ionGroups) == 0) {return(NULL)}
