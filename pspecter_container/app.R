@@ -1,7 +1,7 @@
 ################################################################################
 ################### PSpecteR, a proteomics QC Shiny App ########################
 ########### David Degnan, Pacific Northwest National Laboratory ################
-####################### Last Updated: 2021_04_21 ###############################
+####################### Last Updated: 2023_04_01 ###############################
 ################################################################################
 
 # Load the package for Shiny App infrastructure
@@ -12,24 +12,8 @@ library(shinyBS)
 library(shinyFiles)
 library(shinyjs)
 
-# Load packages for proteomic file reading and LCMS analytics
-library(rhdf5)
-library(mzR)
-library(MSnbase)
-library(Peptides)
-library(rawDiag) 
-
-# Load packages for isotoping
-library(BRAIN)
-library(Rdisop)
-library(lsa)
-
-# Load packages for data processing
-library(seqinr)
-library(dplyr)
-library(reshape2)
-library(gtools)
-library(readxl)
+# Load the pspecterlib package
+library(pspecterlib)
 
 # Load packages for interactive data visualization
 library(data.table)
@@ -45,12 +29,15 @@ imgRender <- function(id, path, width, height) {
   return(img(id = id, src = path, contentType = "image/png", width = width, height = height, align = "left"))
 }
 
+# Determine the version of the tool
+LightVersion <- Sys.getenv("PSpecteRLight") == "1"
+
 # Suppress all warnings
 options(warn=-1)
 
 # Build the interface in which the user will interact. Inverse colors on the 
 # navigation bar will be used (black text as opposed to white). Title is PSpecteR.
-ui <- navbarPage(id = "mainTabs", inverse = T, title = "PSpecteR", 
+ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSpecteR Light", "PSpecteR"), 
                                 
    ################################
    ##  0. WELCOME USER INTERFACE ##
@@ -100,10 +87,18 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = "PSpecteR",
     bsCollapse(multiple = T, bsCollapsePanel(
       title = HTML('<p><strong>Mass Spectra (MS) FILE (Required)</strong></p>'),
       shinyFilesButton("mzmsFile", HTML("<strong>Search Folders:</strong> mzML, mzXML, raw"), 
-                       "Choose MS File: mzML, mzXML, or raw", F), hr(),
-      textInput("mzmsHandle", "...or type in the MS file path", "", placeholder = "Type full MS file path with forward slashes"),
-      list(actionButton("mzmsHandleGo", "Use MS Path"), actionButton("mzmsHandleClear", "Clear MS Path")))), width = 3),
+                       "Choose MS File: mzML, mzXML, or raw", F),
+      
+      if (!LightVersion) {
+        tagList(
+          hr(), 
+          textInput("mzmsHandle", "...or type in the MS file path", "", placeholder = "Type full MS file path with forward slashes"),
+          list(actionButton("mzmsHandleGo", "Use MS Path"), actionButton("mzmsHandleClear", "Clear MS Path"))
+         )
+      },
     
+      NULL)), width = 3),
+   
     # All uploads include an output which contains filename, size, and number of 
     # datapoints for user sanity.  
     mainPanel(htmlOutput("msUpload"))),
@@ -113,9 +108,18 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = "PSpecteR",
     
     bsCollapse(bsCollapsePanel(title = HTML('<p><strong>Peptide Identification (ID) FILE (Optional)</strong></p>'),
       shinyFilesButton("idFile", HTML("<strong>Search Folders:</strong> mzid, mzID"), 
-                       "Choose ID File: mzid", F), hr(),
-      textInput("idHandle", "...or type in the ID file path", "", placeholder = "Type full ID file path with forward slashes"),
-      list(actionButton("idHandleGo", "Use ID Path"), actionButton("idHandleClear", "Clear ID Path")))), width = 3),
+                       "Choose ID File: mzid", F), 
+      
+      if (!LightVersion) {
+        tagList(
+          hr(),
+          textInput("idHandle", "...or type in the ID file path", "", placeholder = "Type full ID file path with forward slashes"),
+          list(actionButton("idHandleGo", "Use ID Path"), actionButton("idHandleClear", "Clear ID Path"))
+        )
+      },
+        
+        
+      NULL)), width = 3),
     
       # Like before, a succesful upload will include output which informs the user.
       mainPanel(htmlOutput("idUpload"))),
@@ -124,9 +128,17 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = "PSpecteR",
   sidebarLayout(sidebarPanel(
     bsCollapse(bsCollapsePanel(title = HTML('<p><strong>FASTA Protein Database (FA) FILE (Optional)</strong></p>'),
     shinyFilesButton("fastaFile", HTML("<strong>Search Folders:</strong> FASTA, FA"), 
-                     "Choose FA File: FASTA (FA)", F), hr(), 
-      textInput("fastaHandle", "...or type in the FA file path", "", placeholder = "Type full FA file path with forward slashes"),
-      list(actionButton("fastaHandleGo", "Use FA Path"), actionButton("fastaHandleClear", "Clear FA Path")))), width = 3),
+                     "Choose FA File: FASTA (FA)", F), 
+    
+    if (!LightVersion) {
+      tagList(
+        hr(), 
+        textInput("fastaHandle", "...or type in the FA file path", "", placeholder = "Type full FA file path with forward slashes"),
+        list(actionButton("fastaHandleGo", "Use FA Path"), actionButton("fastaHandleClear", "Clear FA Path"))
+      )
+    },
+    
+    NULL)), width = 3),
     
     # Like before, a succesful upload will include output which informs the user.
     mainPanel(htmlOutput("fastaUpload"))),
@@ -619,7 +631,7 @@ server <- function(input, output, session) {
   Desc <- data.frame(read_excel(file.path("Server", "Pop_Up_Functions", "Function_Descriptions.xlsx")))
   
   # Set environment variables
-  Environment <- read.csv("/SetEnvironment.csv", header = T)
+  #Environment <- read.csv("/SetEnvironment.csv", header = T)
   
   #######################
   ## 0. WELCOME SERVER ##

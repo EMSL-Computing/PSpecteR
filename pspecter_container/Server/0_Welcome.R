@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_12_30
+## Last Updated: 2023_04_01
 
 # DESCRIPTION: Contains the welcome GIF, how to use app GIF, and a link to the manual 
 
@@ -37,7 +37,7 @@ list(
   
   # Add html output
   output$citation <- renderText({
-    HTML('<p><strong>Please cite:&nbsp;</strong>Degnan et al. 2020</p>
+    HTML('<p><strong>Please cite:&nbsp;<a href="https://pubs.acs.org/doi/full/10.1021/acs.jproteome.0c00857">Degnan et al 2021</a></strong></p>
           <p><strong><span style="font-size: 22px;">FIRST TIME USERS:&nbsp;</span></strong><span style="font-size: 22px;">
           Please enable &quot;Description Mode&quot; under &quot;App Settings&quot; on the Uploads Page.&nbsp;</span></p>')
   })
