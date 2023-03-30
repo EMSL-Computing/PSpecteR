@@ -141,18 +141,9 @@ list(
     } else {SAP}
   }),
   
-  # Render the "Remove Isotopes: Graphics?" Slider
-  output$ssISOgraphsSWITCH <- renderUI({
-    SIG <- materialSwitch("ssISOgraphs", HTML('<strong>Remove Isotopes in Plots</strong>'), value = T, status = "success")
-    if (is.null(input$infoMode) == F && input$infoMode == T) {
-      popify(SIG, Desc[Desc$Name == "ssISOgraphs", "Title"], Desc[Desc$Name == "ssISOgraphs", "Description"],
-             options = list(selector = '.material-switch'), placement = 'right')
-    } else {SIG}
-  }),
-  
   # Render the "Remove Isotopes: Spectra?" Slider
   output$ssISOspectraSWITCH <- renderUI({
-    SIS <- materialSwitch("ssISOspectra", HTML('<strong>Remove Isotopes from Spectra</strong>'), value = F, status = "success")
+    SIS <- materialSwitch("ssISOspectra", HTML('<strong>Include Isotopes</strong>'), value = T, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(SIS, Desc[Desc$Name == "ssISOspectra", "Title"], Desc[Desc$Name == "ssISOspectra", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
@@ -244,6 +235,7 @@ list(
     thePlot <- annotated_spectrum_plot(
       PeakData = GET_peak_data(),
       MatchedPeaks = GET_matched_peaks(),
+      IncludeIsotopes = ifelse(is.null(input$ssISOspectra), TRUE, input$ssISOspectra),
       IncludeLabels = ifelse(is.null(input$ssLetter), TRUE, input$ssLetter),
       LabelSize = ifelse(is.null(input$ssAnnoSize), 8, abs(input$ssAnnoSize)),
       LabelDistance = ifelse(is.null(input$ssLabDist), 0.5, abs(input$ssLabDist)),
@@ -260,9 +252,10 @@ list(
   # Generates a tables of fragment data such as its charge, name, modifications, etc.
   output$ssSeqTable <- DT::renderDataTable({
     
-    # Get fragment
-    frag <- getFrag()
-    if (is.null(frag)) {return(NULL)}
+    # Get Matched Peaks 
+    if (is.null(GET_matched_peaks())) {return(NULL)}
+    
+    browser()
     
     # Round MZ so that it fits in the table, as well as correlation score
     frag$mzExp <- round(frag$mzExp, 1)
@@ -283,145 +276,25 @@ list(
   
   # Makes a bar chart of the frequency of fragments
   output$ssSeqBar <- renderPlotly({
-    
-    # Get fragment
-    frag <- getFrag()
-    if (is.null(frag)) {return(NULL)}
-    
-    # These variables are used to make the title 
-    fragment <- "of all fragments"
-    isotopes <- "including"
-    
-    # Remove isotopes from frag if removing isotopes feature is enabled
-    if (is.null(input$ssISOgraphs) == F && input$ssISOgraphs == T) {
-      frag <- frag[frag$isoPeak == "M+0",]; isotopes <- "excluding"
-    }
-    
-    # Reduce count to a per fragment basis (remove counts by charge and isotope)
-    if (is.null(input$ssBarCTFrag) == F && input$ssBarCTFrag == T) {
-      frag <- frag[match(unique(frag$ion), frag$ion),]; fragment <- "per fragment"
-    }
-    
-    # Get original sequence dataframe
-    oriSDF <- getOriSDF()
-    if (is.null(oriSDF)) {return(NULL)}
-    
-    # Merge XY dataframe and fragment dataframe, removing modification annotations
-    SDF <- merge(oriSDF, frag, by = c("npos", "npos"))
-    SDF <- SDF[SDF$Peptide != "*",]
-    
-    # Subset SDF based on ion groups
-    SDF <- subset(SDF, SDF$type %in% input$ionGroups)
-    
-    names <- c("a", "b", "c", "x", "y", "z", "all")
-    values <- c(nrow(subset(SDF, SDF$type == "a")), nrow(subset(SDF, SDF$type == "b")),
-                nrow(subset(SDF, SDF$type == "c")), nrow(subset(SDF, SDF$type == "x")),
-                nrow(subset(SDF, SDF$type == "y")), nrow(subset(SDF, SDF$type == "z")),
-                nrow(SDF))
-    barVals <- data.frame(names, values)
-    barVals$names <- factor(barVals$names, levels = barVals[["names"]])
-    
-    # Set the title and a y-range so the plot fits nicely in the window in PSpecteR
-    title <- paste("Counts ", fragment, ", ", isotopes, " isotopes", sep = "")
-    max <- barVals[barVals$names == "all", "values"]
-    max <- max + (max * 0.2)
-     
-    # Make bar plot
-    SEQBAR <- plot_ly(x = barVals$names, y = barVals$values, type = "bar", text = barVals$values, 
-            textposition = "outside", 
-            marker = list(color = c("forestgreen","steelblue", "darkviolet", "rgb(172, 122, 122)",
-            "red", "darkorange", "lightgray")), hoverinfo = "text", hovertext =
-            paste(barVals$names, " fragments: ", barVals$values, sep = "")) %>%
-      layout(yaxis = list(title = "Frequency", range = c(0, max)), 
-             title = list(text = title, font = list(size = 14)))
-    
+    if (is.null(GET_matched_peaks())) {return(NULL)}
+    SEQBAR <- ion_bar_plot(MatchedPeaks = GET_matched_peaks())
     plots$currSSBAR <- SEQBAR
-    
     SEQBAR
   }), 
   
   # Creates the "flag" figure with the best matching ion per sequence
-  output$ssSeqFlag <- renderPlotly({
+  output$ssSeqFlag <- renderPlot({
     
-    # Get flag dataframe
-    flagData <- getFlagDF()
-    if (is.null(flagData)) {return(NULL)}
+   # Get matched peaks 
+   if (is.null(GET_matched_peaks())) {return(NULL)}
     
-    # Separate into flag dataframe and modifications dataframe
-    modData <- flagData[flagData$Peptide == "*",]
-    flagData <- flagData[flagData$Peptide != "*",]
-    
-    # Plot the letters
-    p <- plot_ly(flagData, x = flagData$X, y = flagData$Y, mode = "text", name = "",
-                 text = ~flagData$Peptide, type = "scatter", hoverinfo = "none",
-                 textfont = list(size = 15, color = "black")) 
-    
-    # Remove modification data
-    flagData <- flagData[flagData$Peptide != "*",]
-    
-    # Determine all the lines that will be needed, ones for sides, and ones 
-    # for both the top and the bottom.
-    lines <- c()
-    
-    # Top/bottom lines
-    for (i in 1:nrow(flagData)) {
-      line <- list(type = "line", line = list(color = flagData$Color[i]), xref = "x", yref = "y")
-      if (flagData$Type[i] %>% substr(1, 1) %in% c("a", "b", "c")) {
-        line[["x0"]] <- flagData$X[i] + 0.45
-        line[c("y0","y1")] <- flagData$Y[i] - 0.45
-        line[["x1"]] <- flagData$X[i] - 0.45} else{
-          line[["x0"]] <- flagData$X[i] - 0.45
-          line[c("y0", "y1")] <- flagData$Y[i] + 0.45
-          line[["x1"]] <- flagData$X[i] + 0.45}
-      lines <- c(lines, list(line))}
-    
-    # Side lines
-    for (i in 1:nrow(flagData)) {
-      line <- list(type = "line", line = list(color = flagData$Color[i]), xref = "x", yref = "y")
-      if (flagData$Type[i] %>% substr(1, 1) %in% c("a", "b", "c")) {
-        line[c("x0", "x1")] <- flagData$X[i] + 0.45
-        line[["y0"]] <- flagData$Y[i] - 0.45
-        line[["y1"]] <- flagData$Y[i] - 0.1} else{
-          line[c("x0", "x1")] <- flagData$X[i] - 0.45
-          line[["y0"]] <- flagData$Y[i] + 0.45 
-          line[["y1"]] <- flagData$Y[i] + 0.1}
-      lines <- c(lines, list(line))}
-    
-    # Now determine what the plotted values are going to be for each of the ions
-    texts <- c()
-    for (i in 1:nrow(flagData)) {
-      z <- as.character(flagData$z[i])
-      if (is.na(z) | z == "1+") {z <- ""}
-      text <- HTML(paste('<span style="color: ', flagData$Color[i], '; font-size: 10pt;"> ', 
-                         flagData$Type[i], "<sub>", flagData$Ion[i], "</sub><sup>", z, 
-                         "</sup></span>", sep = ""))
-      texts <- c(texts, text)}
-    
-    # Now determine the change in y position depending on whether the ion is 
-    # abc or xyz. 
-    ypos <- c()
-    for (i in 1:nrow(flagData)) {
-      if (flagData$Type[i] %>% substr(1, 1) %in% c("a", "b", "c")) {ypos[i] <- flagData$Y[i] - 0.3} else {
-        ypos[i] <- flagData$Y[i] + 0.3}}
-    
-    # Update x and y values to fit the data
-    xax <- list(title = "", zeroline = FALSE, showline = FALSE, showticklabels = FALSE,
-                showgrid = FALSE, range = c(0.5, 15.5))
-    yax <- list(title = "", zeroline = FALSE, showline = FALSE, showticklabels = FALSE,
-                showgrid = FALSE, range = c(-4.5, -0.5))
-    
-    # Now add all ofthese components together to generate the plot, with how
-    # far off each experimental value is from the theoretical value. 
-    p <- layout(p, xaxis = xax, yaxis = yax, shapes = lines, showlegend = F) %>%
-      add_trace(x = flagData$X, y = ypos, mode = "text", text = texts, name = "",
-                hovertext = paste("PPM Error:", round(flagData$MatchScore, 6)), 
-                hoverinfo = "text")
-    
-    # Add modifications if they exist
-    if (nrow(modData) > 0) {
-      p <- add_trace(p, x = modData$X, y = modData$Y, mode = "text", name = "",
-                     text = ~modData$Peptide, hovertext = ~modData$Mod, hoverinfo = "text")
-    }
+    # Make plot
+    p <- sequence_plot(
+      MatchedPeaks = GET_matched_peaks(),
+      IncludeIsotopes = ifelse(is.null(input$ssISOspectra), TRUE, input$ssISOspectra),
+      RemoveChargeAnnotation = TRUE,
+      WrapLength = 15
+    )
     
     plots$currFLAG <- p
       
@@ -432,10 +305,16 @@ list(
   output$ssAllFrag <- DT::renderDataTable({
     
     # Get all fragment data
-    AllFrag <- getAllFrag()
+    if (is.null(GET_matched_peaks())) {return(NULL)}
+    
+    # Count anntations
+    CA <- count_ion_annotations(
+      MatchedPeaks = GET_matched_peaks(),
+      IncludeIsotopes = ifelse(is.null(input$ssISOspectra), TRUE, input$ssISOspectra)
+    )
     
     # Render datatable
-    datatable(AllFrag, selection = list(mode = 'single'), rownames = F, filter = 'top', 
+    datatable(CA, selection = list(mode = 'single'), rownames = F, filter = 'top', 
               options = list(pageLength = 3), escape = F)
   }),
   
@@ -477,6 +356,60 @@ list(
     datatable(revals$AddedIons, selection = list(mode = 'single'), rownames = F, filter = 'none', 
               options = list(pageLength = 10), escape = F)
     
+    
+  }),
+  
+  # Add heat error map 
+  output$ErrorMap <- renderPlotly({
+    
+    # Return NULL if no matched peaks 
+    if (is.null(GET_matched_peaks())) {return(NULL)}
+      
+    # Make plot   
+    HM <- error_heatmap_plot(
+      MatchedPeaks = GET_matched_peaks(),
+      IncludeIsotopes = ifelse(is.null(input$ssISOspectra), TRUE, input$ssISOspectra)
+    )
+      
+    plots$currHM <- HM
+    
+    return(HM) 
+    
+  }),
+  
+  # Add coverage 
+  output$coverage <- renderText({
+    
+    # These are the variables needed to render at the bottom of the sidebar
+    coverage <- NULL
+    numPeaks <- NULL
+    
+    # Get Scan Data
+    scan <- GET_scan_metadata()
+    if (is.null(scan) == F) {
+      clicked <- GET_scan_click()
+      peak <- GET_peak_data()
+      peak <- peak[peak$intensity > 0,]
+      numPeaks <- nrow(peak)
+      
+      # Get Fragment Data to Calculate Coverage 
+      if (is.null(GET_matched_peaks()) == F) { 
+        
+        # Get the sequence length, removing one as the first amino acid is not countedin the coverage calculation
+        seqLen <- nchar(scan[clicked, "Sequence"]) - 1
+        
+        # If a new sequence has been inputted, test that new sequence
+        if (is.na(seqLen)) {seqLen <- nchar(revals$testSeq) - 1}
+        
+        # Get all nposition data of identified fragments, remove npos 1, and take the length
+        covLen <- length(unique(GET_matched_peaks()$npos[GET_matched_peaks()$npos != 1]))
+        
+        coverage <- paste(round((covLen / seqLen * 100), 1), "%", sep = "")
+        
+      }} 
+    
+    # Paste coverage output
+    paste("Number of Peaks: ", numPeaks, ", Coverage: ", coverage, sep = "")
     
   })
   

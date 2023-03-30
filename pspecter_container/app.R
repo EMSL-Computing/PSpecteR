@@ -191,6 +191,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        numericInput("ssIntenMin", "Intensity Minimum", 100, min = 0, max = 1e6, step = 100),
        numericInput("ssCorrScoreFilter", "Minimum Pearson Correlation Score", 0, min = 0, max = 1, step = 0.01),
        uiOutput("SelectedIons"), 
+       uiOutput("ssISOspectraSWITCH"),
        hr(),
        actionButton("ManageIons", "Manage Ions"),
        hr(),
@@ -220,10 +221,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
          numericInput("ssLabDist", "Set Label Distance (M/Z)", 0, 0, 10, 0.1),
          
          # Enable letter annotation on the spectrum
-         uiOutput("ssLetterSWITCH"), 
-          
-         # Enable or disable isotopes for spectra
-         uiOutput("ssISOspectraSWITCH")
+         uiOutput("ssLetterSWITCH")
         
       ),
      
@@ -321,10 +319,10 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        tabsetPanel(id = "SStabs",
          tabPanel("Spectrum", jqui_resizable(plotlyOutput("ssSpectrum", width = "100%", height = "300px")) 
                   %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-         tabPanel("Error Map", plotlyOutput("ErrorMap", width = "100%", height = "300px") 
+         tabPanel("Error Map", jqui_resizable(plotlyOutput("ErrorMap", width = "100%", height = "300px")) 
                   %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
          tabPanel("XIC", htmlOutput("warnXIC"),  
-                  plotlyOutput("XIC", width = "100%", height = "300px") 
+                  jqui_resizable(plotlyOutput("XIC", width = "100%", height = "300px")) 
                   %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))))),
         
       # Sequence View: A tabular display which includes an sequence view, 
@@ -332,22 +330,22 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
       # and a bar chart which shows the number of fragment types.
       column(5, 
        tabsetPanel(id = "PTBtabs",
-         tabPanel("MS1", plotlyOutput("ssMatPre", width = "125%", height = "300px") 
+         tabPanel("MS1", jqui_resizable(plotlyOutput("ssMatPre", width = "125%", height = "300px")) 
                   %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-         tabPanel("Next MS1", plotlyOutput("ssMatNext", width = "125%", height = "300px") 
+         tabPanel("Next MS1", jqui_resizable(plotlyOutput("ssMatNext", width = "125%", height = "300px")) 
                   %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-         tabPanel("Filter Ions", DTOutput("ssSeqTable", width = "125%", height = "300px")))),
+         tabPanel("Filter Ions", jqui_resizable(DT::DTOutput("ssSeqTable", width = "125%", height = "300px"))))),
         
       # Scan View: The datatable with information as determined by the checkboxes
       # with a sequence tab to visualize the ions with the smallest ppm error. 
       column(12, 
        tabsetPanel(id = "SSAtabs",      
          tabPanel("Scan", htmlOutput("coverage"), 
-                  DT::DTOutput("ssScan", width = "115%", height = "250px")),
-         tabPanel("Sequence", plotlyOutput("ssSeqFlag", width = "115%", height = "400px") 
+                  jqui_resizable(DT::DTOutput("ssScan", width = "115%", height = "250px"))),
+         tabPanel("Sequence", jqui_resizable(plotOutput("ssSeqFlag", width = "115%", height = "400px")) 
                   %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-         tabPanel("Ion Annotation", DT::DTOutput("ssAllFrag", width = "115%", height = "250px")),
-         tabPanel("Ion Barplot", plotlyOutput("ssSeqBar", width = "115%", height = "300px") 
+         tabPanel("Ion Annotation", jqui_resizable(DT::DTOutput("ssAllFrag", width = "115%", height = "250px"))),
+         tabPanel("Ion Barplot", jqui_resizable(plotlyOutput("ssSeqBar", width = "115%", height = "300px")) 
                   %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")))))))),
 
    #############################
@@ -671,12 +669,6 @@ server <- function(input, output, session) {
   
   # Make the scan and seq graphs and tables
   source(file.path("Server", "2_ScanXIC", "ScanSeq.R"), local = T)$value
-  
-  # Display coverage data in sidebar
-  source(file.path("Server", "2_ScanXIC", "Coverage.R"), local = T)$value
-  
-  # Plot the Error Heat Map 
-  source(file.path("Server", "2_ScanXIC", "ErrorMap.R"), local = T)$value
   
   # Plot the Precursors
   source(file.path("Server", "2_ScanXIC", "Precursors.R"), local = T)$value
