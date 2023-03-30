@@ -246,12 +246,15 @@ list(
   # If the Bottom-Up Test File switch is enabled, load the appropriate data
   observeEvent(input$testBU, {
     if (input$testBU == T) {
-      msPath(file.path("/data", "TestFiles", "BottomUp", "BottomUp.mzML"))
-      idPath(file.path("/data", "TestFiles", "BottomUp", "BottomUp.mzid"))
-      fastaPath(file.path("/data", "TestFiles", "QC_Shew.fasta"))
-      #msPath("./data/TestFiles/BottomUp/BottomUp.mzML")
-      #idPath("./data/TestFiles/BottomUp/BottomUp.mzid")
-      #fastaPath("./data/TestFiles/QC_Shew.fasta")
+      if (LightVersion) {
+        msPath(file.path("TestFiles", "BottomUp", "BottomUp.mzML"))
+        idPath(file.path("TestFiles", "BottomUp", "BottomUp.mzid"))
+        fastaPath(file.path("TestFiles", "QC_Shew.fasta"))
+      } else {
+        msPath("./data/TestFiles/BottomUp/BottomUp.mzML")
+        idPath("./data/TestFiles/BottomUp/BottomUp.mzid")
+        fastaPath("./data/TestFiles/QC_Shew.fasta")
+      }
       disable("testTD")
     } else {
       msPath(NULL)
@@ -275,9 +278,15 @@ list(
   # Load only the raw file to demonstrate that it can be loaded
   observeEvent(input$testTD, {
     if (input$testTD == T) {
-      msPath(file.path("/data", "TestFiles", "TopDown", "TopDown.mzML"))
-      idPath(file.path("/data", "TestFiles", "TopDown", "TopDown.mzid"))
-      fastaPath(file.path("/data", "TestFiles", "QC_Shew.fasta"))
+      if (LightVersion) {
+        msPath(file.path("TestFiles", "TopDown", "TopDown.mzML"))
+        idPath(file.path("TestFiles", "TopDown", "TopDown.mzid"))
+        fastaPath(file.path("TestFiles", "QC_Shew.fasta"))
+      } else {
+        msPath(file.path("/data", "TestFiles", "TopDown", "TopDown.mzML"))
+        idPath(file.path("/data", "TestFiles", "TopDown", "TopDown.mzid"))
+        fastaPath(file.path("/data", "TestFiles", "QC_Shew.fasta"))
+      }
       disable("testBU")
     } else {
       msPath(NULL)

@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2021_03_26
+## Last Updated: 2023_04_01
 
 # DESCRIPTION: Generates Scan & Seq plots not isolated in the other scripts
 
@@ -125,7 +125,7 @@ list(
   
   # Render the Real Time Editing Widget
   output$RealTimeSWITCH <- renderUI({
-    RTE <- materialSwitch("RealTime", HTML("<strong>Freeze Interactive Spectra Editing</strong>"), value = T, status = "success")
+    RTE <- materialSwitch("RealTime", HTML("<strong>Freeze Interactive Spectra Editing</strong>"), value = F, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(RTE, Desc[Desc$Name == "RealTime", "Title"], Desc[Desc$Name == "RealTime", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
@@ -220,15 +220,16 @@ list(
   
   # Generates the scan view (table)
   output$ssScan <- DT::renderDataTable({
-  
+
    # Scan data is required  
-   req(getScan())
-   scan <- getScan()
+   req(GET_scan_metadata())
+
+   # Pull scan data and convert class
+   scan <- GET_scan_metadata()
+   class(scan) <- c("data.table", "data.frame")
    
-   # Add modification annotations if they exist
-   if (is.null(getScanMod()) == F) {scan <- getScanMod()}
-   
-   datatable(scan[, c(as.integer(input$ssCheckboxes)), drop = FALSE], 
+   # Make datatable
+   datatable(scan %>% dplyr::select(colnames(scan)[as.numeric(input$ssScanMetadataCol)]),
              selection = list(mode = 'single', selected = 1), rownames = F, filter = 'top', 
              options = list(pageLength = 5, scrollX = T))
   }), 
@@ -239,123 +240,37 @@ list(
     # Have switch enable Real-Time Editing
     if (is.null(input$RealTime) == F && input$RealTime == F) {plots$currSPEC} else {
         
-    # Get the peak data, scan number, fragments, and rows from "Select Ions" table
-    if (is.null(getSSPeak()) || nrow(getSSPeak()) == 0) {return(NULL)}
-    peak <- getSSPeak()
-    scanNum <- getScan()[getScanClick(), "Scan.Num"]
-    frag <- getFrag()
-    rows <- input$ssSeqTable_rows_selected
-    if (is.null(rows) == F) {
-      frag <- frag[rows,]
-      peak <- peak[trunc2(peak$mz) %in% trunc2(frag$mzExp),]
-    }
-    
-    # If there are more than 50,000 peaks in the spectra, let user know. 
-    if (nrow(peak) > 5e4) {
-      sendSweetAlert(session, "Plotting more than 50,000 peaks", 
-        paste("This may take a while to generate and the resulting spectra",
-          "will be very busy. Consider setting filters in 1. Filter Settings."))
-    }
-   
-    ##############################################
-    ## Step 1: Plot spectra without annotations ##
-    ##############################################
-    
-    # Add 0's to peak data and sort 
-    len <- nrow(peak)
-    spectra <- data.frame("mzExp" = c(peak$mz - 1e-9, peak$mz, peak$mz + 1e-9),
-                          "intensityExp" = c(rep(0, len), peak$intensity, rep(0, len)))
-    spectra <- spectra[order(spectra$mzExp),]
-    
-    # Add missing data 
-    spectra$ion <- spectra$type <- spectra$z <- spectra$isoPeak <- NA
-    
-    # If frag exists, removes fragment associated peaks
-    if (is.null(frag) == F) {
-      spectra <- spectra[spectra$mz %in% frag$mzExp == F,]
-    }
-    
-    # Plot spectra
-    p <- plot_ly(x = spectra$mzExp, y = spectra$intensityExp, type = "scatter",
-                 mode = "lines+markers", line = list(color = "black"), 
-                 name = "Spec", marker = list(opacity = 0, color = "black"), hoverinfo = "text", 
-                 hovertext = paste(paste("MZ:", round(spectra$mzExp, 3), 
-                                         "<br>Int:", round(spectra$intensityExp, 0))))
-  
-  ##############################
-  ## Step 2: Plot annotations ##
-  ##############################
-  
-  # This step only occurs if they are fragments
-  if (is.null(frag) == F) {
-    
-    # Set colors list
-    colors <- c("a" = "forestgreen", "b" = "steelblue", "c" = "darkviolet",
-                "x" = "rgb(172, 122, 122)", "y" = "red", "z" = "darkorange")
-    
-    # Subset out fragment data 
-    frag <- frag[,c("mzExp", "intensityExp", "ion", "type", "z", "isoPeak")]
-    
-    for (type in c("a", "b", "c", "x", "y", "z")) {
-      fragSub <- frag[substr(frag$type, 1, 1) == type,]
-      len <- nrow(fragSub)
-      spectraAnno <- data.frame("mzExp" = c(fragSub$mzExp - 1e-9, fragSub$mzExp, fragSub$mzExp + 1e-9),
-                      "intensityExp" = c(rep(0, len), fragSub$intensityExp, rep(0, len)),
-                      "ion" = rep(fragSub$ion, 3), "z" = rep(fragSub$z, 3), 
-                      "isoPeak" = rep(fragSub$isoPeak, 3))
-      spectraAnno <- spectraAnno[order(spectraAnno$mzExp),]
-      p <- add_trace(p, x = spectraAnno$mzExp, y = spectraAnno$intensity, type = "scatter",
-                     mode = "lines+markers", line = list(color = colors[substr(type, 1, 1)]), 
-                     name = type, marker = list(opacity = 0), 
-                     hoverinfo = "text", hovertext = paste(paste("Ion: ", spectraAnno$ion, 
-                     "<sup>", spectraAnno$z, "</sup> ", spectraAnno$isoPeak, sep = ""), "<br>MZ:",
-                    round(spectraAnno$mzExp, 3), "<br>Int:", round(spectraAnno$intensity, 0)))
+      # Get the peak data, scan number, fragments, and rows from "Select Ions" table
+      if (is.null(GET_peak_data()) || nrow(GET_peak_data()) == 0) {return(NULL)}
       
-      # Add labels if enabled
-      if (is.null(input$ssLetter) == F && input$ssLetter == T & is.null(getFrag()) == F
-          && nrow(getFrag()) > 0 & getScan()[getScanClick(), "MS.Level"] != 1 & 
-          nrow(spectraAnno) > 0) {
-          
-          # Remove 0 from labelling
-          toLabel <- spectraAnno[spectraAnno$intensityExp > 0,]
-          
-          # Add spacing
-          dist <- input$ssLabDist
-          if (dist == "Very Close") {dist <- 2e5} else if (dist == "Close") {dist <- 2e4} else
-            if (dist == "Near") {dist <- 2e3} else if (dist == "Far") {dist <- 2e2} else {dist <- 2e1}
-          adjValX <- max(spectra$mzExp, na.rm = T) / dist
-          adjValY <- max(spectra$intensityExp, na.rm = T) / dist
-        
-          # Get and plot labels
-          for (i in 1:nrow(toLabel)) {
-            text <- list(
-              x = toLabel$mzExp[i] + adjValX, y = toLabel$intensityExp[i] + adjValY,
-              text = HTML(paste('<span style="color: ', colors[type], '; font-size: ', 
-                          input$ssAnnoSize, 'pt;"> ', toLabel$ion[i], "<sup>", 
-                          toLabel$z[i], "</sup>, ", toLabel$isoPeak[i], "</span>", sep = "")),
-              xref = "x", yref = "y", showarrow = FALSE)
-            p <- p %>% layout(annotations = text)
-          }}
-       }
-    }
-    
-   # Declare X and Y range
-   xrange <- c(0, max(spectra$mzExp) + 1)
-   yrange <- c(0, max(spectra$intensity) + 1)
-  
-   # Adjust window as necessary (specific to when ions are selected)
-   if (is.null(rows) == F) {
-      xrange <- c(min(spectra$mzExp) - 1, max(spectra$mzExp) + 1)
-      yrange <- c(0, max(spectra$intensityExp))
-   }
+      # Pull peak data 
+      peak <- GET_peak_data()  
       
-    p <- p %>% layout(xaxis = list(title = '<i>m/z</i> (Mass to Charge)', range = xrange),
-                 yaxis = list(title = "Intensity", range = yrange), 
-                 title = paste("Scan:", scanNum), legend = list(orientation = "h"))
-  
-    plots$currSPEC <- p
-  
-    plotly::toWebGL(p)
+      # Pull matched peaks 
+      matched_peaks <- GET_matched_peaks()
+      
+      # If there are more than 50,000 peaks in the spectra, let user know. 
+      if (nrow(peak) > 5e4) {
+        sendSweetAlert(session, "Plotting more than 50,000 peaks", 
+          paste("This may take a while to generate and the resulting spectra",
+            "will be very busy. Consider setting filters in 1. Filter Settings."))
+      }
+      
+      #browser()
+      
+      # Make plot 
+      spectra_plot <- annotated_spectrum_plot(
+        PeakData = peak,
+        MatchedPeaks = matched_peaks,
+        IncludeIsotopes = ifelse(is.null(input$ssIsoSpectra), TRUE, input$ssIsoSpectra),
+        Interactive = TRUE
+      )
+      
+      # Save plot
+      plots$currSPEC <- spectra_plot
+
+      spectra_plot
+      
     }
     
   }),

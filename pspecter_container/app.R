@@ -11,6 +11,7 @@ library(shinyWidgets)
 library(shinyBS)
 library(shinyFiles)
 library(shinyjs)
+library(shinyjqui)
 
 # Load the pspecterlib package
 library(pspecterlib)
@@ -39,9 +40,9 @@ options(warn=-1)
 # navigation bar will be used (black text as opposed to white). Title is PSpecteR.
 ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSpecteR Light", "PSpecteR"), 
                                 
-   ################################
-   ##  0. WELCOME USER INTERFACE ##
-   ################################
+   #############################
+   ##  WELCOME USER INTERFACE ##
+   #############################
    
    # Simply a welcome greeting and brief explanation of how to use this GUI.
    tabPanel("Welcome", mainPanel(
@@ -69,12 +70,12 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
     # Add UI for the manual and citation information
     column(12, htmlOutput("citation")), column(12, htmlOutput("manual")))),
    
-   ##############################
-   ## 1. UPLOAD USER INTERFACE ##
-   ##############################
+   ###########################
+   ## UPLOAD USER INTERFACE ##
+   ###########################
    
    # This panel allows users to upload their data. 
-   tabPanel("1. Upload", 
+   tabPanel("Upload MS Data", 
             
   # For the mass spec files: raw, mzml, mzml.gz, mzxml, and mzxml.gz are supported
   sidebarLayout(sidebarPanel(
@@ -152,12 +153,12 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
      )), width = 3),
     mainPanel(htmlOutput("testUpload")))),
    
-   ################################
-   ## 2. MS & XIC USER INTERFACE ##
-   ################################
+   #############################
+   ## MS & XIC USER INTERFACE ##
+   #############################
    
    # This panel allows for interaction with MS2 fragment data.
-   tabPanel("2. MS & XIC", 
+   tabPanel("Visualize MS & XIC", 
             
   # The contents of this sidebar are checkboxes, numeric tolerance input, color
   # options, and outputted coverage, precursor, and number of peak information.
@@ -175,25 +176,39 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        .irs--shiny .irs-from, .irs--shiny .irs-to, .irs--shiny .irs-single {background-color: #5CB85C;}"))),
     
     bsCollapse(id = "ssCollapse", multiple = T, 
-     open = list("1. Filter Settings"),
+     open = list("Peak Matching Settings"),
      
-     
-     # 1. Selection Ions: Adjust selection ions based on activation method
-     bsCollapsePanel("1. Filter Settings", 
+     # Settings for the matching algorithm
+     bsCollapsePanel("Peak Matching Settings", 
         
        # Allows users to select how far off the experimental fragment value can be from the theoretical fragment value.
-       HTML("<strong>Filter spectra data by...</strong></p>"), hr(),
-       column(6, uiOutput("SelectedIons")),
-       column(6, br(), actionButton("ManageIons", "Manage Ions")),
-       column(12, numericInput("ssIntenMin", "Intensity", 100, min = 1, max = 1e9, step = 10)),
-       column(12, sliderInput("ssTolerance", "Fragment Tolerance (PPM)", 0.1, 20, 10, 0.1, T)),    
-       column(12, sliderInput("ssIsoPerMin", "Isotopic Percentage", 1, 100, 10, 1, T)),
-       column(12, sliderTextInput("ssCorrScoreFilter", "Correlation Score", c(0:100/100, "ALL"), selected = "ALL"))), 
-     
-     # 2. Change spectrum settings                
-     bsCollapsePanel("2. Spectra Settings", bsCollapse(multiple = T, 
-       bsCollapsePanel("2a. Spectra View",               
+       pickerInput("ssAlgorithm", "Select Algorithm", choices = list("Closest Peak (Top-Down)" = "closest peak", "Highest Abundance (Bottom-Up)" = "highest abundance"), 
+                   selected = "Closest Peak (Top-Down)"),
+       numericInput("ssTolerance", "M/Z Tolerance (PPM)", 10, min = 0.01, max = 100, step = 0.1),
+       numericInput("ssIntenMin", "Intensity Minimum", 100, min = 0, max = 1e6, step = 100),
+       numericInput("ssCorrScoreFilter", "Minimum Pearson Correlation Score", 0, min = 0, max = 1, step = 0.01),
+       uiOutput("SelectedIons"), 
+       hr(),
+       actionButton("ManageIons", "Manage Ions"),
+       hr(),
+                     
+       # Allow user test a different sequence: autofill with original sequence
+       uiOutput("ssRenderNS"),
        
+       # Reveal warnings if the input does not comply with necessary standard
+       htmlOutput("ssNSWarn"), hr(),
+       
+       # Add an action button for adding modifications or restoring the sequence
+       list(actionButton("ssASeq", "Apply Seq"),
+            actionButton("ssRSeq", "Restore Seq"))
+       
+     ),
+     
+     # Spectrum plot settings               
+     bsCollapsePanel("Plot Settings", 
+       
+       bsCollapse(bsCollapsePanel("Spectrum Plot Settings",               
+                     
          # Set the font size of the annotated
          sliderInput("ssAnnoSize", "Label Size", 2, 15, 6, 1),
                        
@@ -207,39 +222,26 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
                 
          # Set slider for real-time edits of spectra
          uiOutput("RealTimeSWITCH"),
-         
-         # Place spectra in large pop up window
-         actionButton("ssLargeSpec", "See the Spectrum in Full Screen")),
-      
-       bsCollapsePanel("2b. Isotope Settings",
           
          # Enable or disable isotopes for spectra
-         uiOutput("ssISOspectraSWITCH")))),
-     
-     # 3. Sequence Settings
-     bsCollapsePanel("3. Sequence Settings",
-                     
-       # Allow user test a different sequence: autofill with original sequence
-       uiOutput("ssRenderNS"),
+         uiOutput("ssISOspectraSWITCH"),
        
-       # Reveal warnings if the input does not comply with necessary standard
-       htmlOutput("ssNSWarn"), hr(),
-       
-       # Add an action button for adding modifications or restoring the sequence
-       list(actionButton("ssASeq", "Apply Seq"),
-            actionButton("ssRSeq", "Restore Seq"))),
+        # Place spectra in large pop up window
+        actionButton("ssLargeSpec", "See the Spectrum in Full Screen")
+        
+      ),
      
-     # 4. Graphics Settings
-     bsCollapsePanel("4. Graphics Settings", bsCollapse(multiple = T, 
-       bsCollapsePanel("4a. MS1 Plots Settings", 
+      bsCollapsePanel("MS1 Plots Settings", 
          
-         # Most Abundant Isotope switch, Trace switch, and Pre MZ range
-         numericInput("MPpercdiff", "Filter by Percent Error", 25),
-         numericInput("MPwinsize", "Set MS1 Window Size", 3),
-         actionButton("MPlargePre", "MS1 Full Screen"),
-         actionButton("MPlargeNext", "Next MS1 Full Screen")),
+       # Most Abundant Isotope switch, Trace switch, and Pre MZ range
+       numericInput("MPpercdiff", "Filter by Percent Error", 25),
+       numericInput("MPwinsize", "Set MS1 Window Size", 3),
+       actionButton("MPlargePre", "MS1 Full Screen"),
+       actionButton("MPlargeNext", "Next MS1 Full Screen")
        
-       bsCollapsePanel("4b. Fragment Figures",
+      ),
+       
+      bsCollapsePanel("Other Figures",
                  
          # Set slider for bar chart counting by fragment or not
          uiOutput("ssBarCTFragSWITCH"), 
@@ -248,20 +250,25 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
          uiOutput("ssAnoPTMSWITCH"),
          
          # Enable or disable isotopes for summary graphics 
-         uiOutput("ssISOgraphsSWITCH")))),
+         uiOutput("ssISOgraphsSWITCH")
+         
+      )
+      
+    )),
 
-     # 5. Scan metadata table     
-     bsCollapsePanel("5. Table Column Settings",               
+     # Scan metadata table     
+     bsCollapsePanel("Table Column Settings",               
                      
        # Converts the checked boxes to column numbers for easy datatable manipulation.
        # Certain datatable columns are automatically selected and presented.    
-        pickerInput("ssCheckboxes", "Select Scan Table Columns", 
+        pickerInput("ssScanMetadataCol", "Select Scan Metadata Table Columns", 
            options = list(`live-search` = T, `actions-Box` = T),
-           c("Order" = "1", "Scan Num" = "2", "MS Level" = "3", "RT" = "4", "Pre MZ" = "5", 
-             "Pre Charge" = "6", "Pre Scan" = "7", "Act Met" = "8", "Sequence" = "9", 
-             "Protein ID" = "10", "Mass" = "11", "Score" = "12", 
-             "QVal" = "13", "isDecoy" = "14", "Description" = "15"), 
-           selected = c("2", "3", "4", "5", "6", "7", "8", "9", "10"), multiple = T), hr(),
+           c("Scan Number" = "1", "MS Level" = "2", "Retention Time" = "3", "Precursor M/Z" = "4", "Precursor Charge" = "5", 
+             "Precursor Scan" = "6", "Activation Method" = "7", "Sequence" = "8", "Protein ID" = "9", 
+             "Calculated Mass" = "10", "Experimental Mass" = "11", "Score" = "12", 
+             "Q Value" = "13", "Decoy" = "14", "Description" = "15", "Protein Start Position" = "16",
+             "Modifications" = "17", "Order" = "18"), 
+           selected = as.character(c(1:7, 9:12, 16:18)), multiple = T), hr(),
        
         # Select columns for fragment table
         pickerInput("ssFragColumns", "Select Fragment Columns", 
@@ -270,8 +277,8 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
              "Iso" = "5", "MZ" = "6", "CorrScore" = "7"),
            selected = c("1", "2", "3", "4", "5", "6", "7"), multiple = T)),
      
-     # 6. XIC Settings
-     bsCollapsePanel("6. XIC Settings", 
+     # XIC Settings
+     bsCollapsePanel("XIC Settings", 
                      
        # XIC Tolerance
        numericInput("tolXIC", "Set XIC Tolerance (ppm)", value = 10, step = 1), hr(),
@@ -287,9 +294,9 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        # Set mass and charge
        uiOutput("massXIC"), uiOutput("chargeXIC")),      
 
-     # 7. Export Images & Data
-     bsCollapsePanel("7. Export Images & Data", bsCollapse(multiple = T, 
-       bsCollapsePanel("7a. Export Images",               
+     # Export Images & Data
+     bsCollapsePanel("Snapshot Images and Export Data", bsCollapse(multiple = T, 
+       bsCollapsePanel("Snapshot Images",               
          actionButton("imgSPEC", "Spectrum"),
          actionButton("imgHM", "Error Map"), HTML("<p></p>"), 
          actionButton("imgMPPRE", "Previous MS1"),
@@ -297,7 +304,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
          actionButton("imgXIC", "XIC"),
          actionButton("imgSSBAR", "Barchart"), HTML("<p></p>"),
          actionButton("imgFLAG", "Sequence")), 
-       bsCollapsePanel("7b. Export Data",
+       bsCollapsePanel("Export Data",
          downloadButton("SCANcsv", "Export Scan Metadata"), HTML("<p></p>"),
          downloadButton("PEAKcsv", "Export Peak Data"), HTML("<p></p>"),
          downloadButton("FRAGcsv", "Export Annotated Peak Data"), HTML("<p></p>"),
@@ -316,7 +323,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
       # Error Map: The ppm errors for each identified spectrum's peak
       column(7, 
        tabsetPanel(id = "SStabs",
-         tabPanel("MS/MS", plotlyOutput("ssSpectrum", width = "100%", height = "300px") 
+         tabPanel("Spectrum", jqui_resizable(plotlyOutput("ssSpectrum", width = "100%", height = "300px")) 
                   %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
          tabPanel("Error Map", plotlyOutput("ErrorMap", width = "100%", height = "300px") 
                   %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
@@ -347,12 +354,12 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
          tabPanel("Ion Barplot", plotlyOutput("ssSeqBar", width = "115%", height = "300px") 
                   %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")))))))),
 
-   #####################################
-   ## 3. VISUALIZE PTM USER INTERFACE ##
-   #####################################
+   #############################
+   ## TEST PTM USER INTERFACE ##
+   #############################
    
    # Enables exploration of how PTMs affect the spectra.
-   tabPanel("3. Vis PTM",
+   tabPanel("Test PTMs",
             
     # Select the spectra
     sidebarLayout(sidebarPanel(
@@ -397,13 +404,13 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
               withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")))))),
         column(12, DT::dataTableOutput("VPmetrics", width = "100%", height = "250px"))))),
    
-   ########################################
-   ## 4. PROTEIN COVERAGE USER INTERFACE ##
-   ########################################
+   #####################################
+   ## PROTEIN COVERAGE USER INTERFACE ##
+   #####################################
    
    # Allows user to explore matched ID data and answer questions about frequency,
    # patterns, protein families, etc. 
-   tabPanel("4. Protein Coverage", 
+   tabPanel("Protein Coverage", 
             
     # Set the tolerance      
     sidebarLayout(sidebarPanel(
@@ -435,6 +442,8 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
    ###############################
    ## DB SEARCH USER INTERFACES ##
    ###############################
+  
+  if (!LightVersion) {
    
    navbarMenu("DB Search", 
               
@@ -493,7 +502,9 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
         # Modifications File Input
         tabPanel("Modifications File", htmlOutput("TDModifications"))
         
-      ))))),
+      )))))
+    
+   },
    
    ################################
    ## ADDITIONAL USER INTERFACES ##
@@ -507,7 +518,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
     ########################################
     
     # This tab displays a feature plot for visualization of the entire spec file
-    tabPanel("A. Spectra Metadata", 
+    tabPanel("Visualize Spectra Metadata", 
              
      # Remind users which tab they're in
      sidebarLayout(sidebarPanel(
@@ -527,7 +538,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
     ##########################################
     
     # Generate the ProMex Feature Map
-    tabPanel("B. ProMex Feature Map", sidebarLayout(sidebarPanel(
+    tabPanel("ProMex Feature Map", sidebarLayout(sidebarPanel(
       HTML('<p style="text-align: center;"><span style="font-size: 16pt;"><strong>
             B. PROMEX FEATURE MAP</strong></span></p>'),
       bsCollapse(multiple = T, open = list("1. Upload MS1FT"),
@@ -553,7 +564,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
     #######################################
     
     # Make the unicode glossary
-    tabPanel("C. Unimod Glossary", sidebarLayout(sidebarPanel(
+    tabPanel("Unimod Glossary", sidebarLayout(sidebarPanel(
       HTML('<p style="text-align: center;"><span style="font-size: 16pt;"><strong>
            C. UNIMOD GLOSSARY</strong></span></p>'), 
       bsCollapse(multiple = T, bsCollapsePanel("1. Select Columns",
@@ -678,6 +689,8 @@ server <- function(input, output, session) {
   
   # Get Unimod Glossary
   source(file.path("Server", "Get", "Get_Glossary.R"), local = T)$value
+  
+  source(file.path("Server", "Get.R"), local = T)$value
   
   #############################
   ## 2. SCAN & XIC FUNCTIONS ##
