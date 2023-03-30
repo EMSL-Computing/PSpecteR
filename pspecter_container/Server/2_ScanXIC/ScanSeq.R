@@ -123,22 +123,19 @@ list(
     } else {SL}
   }),
   
-  # Render the Bar: Count Per Fragment Widget
-  output$ssBarCTFragSWITCH <- renderUI({
-    BCTF <- materialSwitch("ssBarCTFrag", HTML("<strong>Barplot: Count Ions per Fragment</strong>"), value = T, status = "success")
-    if (is.null(input$infoMode) == F && input$infoMode == T) {
-      popify(BCTF, Desc[Desc$Name == "ssBarCTFrag", "Title"], Desc[Desc$Name == "ssBarCTFrag", "Description"],
-             options = list(selector = '.material-switch'), placement = 'right')
-    } else {BCTF}
-  }),
-  
   # Render the Seq: Annotate PTMs Widget
   output$ssAnoPTMSWITCH <- renderUI({
-    SAP <- materialSwitch("ssAnoPTM", HTML("<strong>Annotate Modifications in Plots</strong>"), value = T, status = "success")
+    SAP <- materialSwitch("ssAnoPTM", HTML("<strong>All Plots: Annotate Modifications</strong>"), value = T, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(SAP, Desc[Desc$Name == "ssAnoPTM", "Title"], Desc[Desc$Name == "ssAnoPTM", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
     } else {SAP}
+  }),
+  
+  # Render the Seq: Charge 
+  output$seqChargeSWITCH <- renderUI({
+    CS <- materialSwitch("seqCharge", HTML("<strong>Sequence: Add Charges</strong>"), value = F, status = "success")
+    CS
   }),
   
   # Render the "Remove Isotopes: Spectra?" Slider
@@ -292,7 +289,7 @@ list(
     p <- sequence_plot(
       MatchedPeaks = GET_matched_peaks(),
       IncludeIsotopes = ifelse(is.null(input$ssISOspectra), TRUE, input$ssISOspectra),
-      RemoveChargeAnnotation = TRUE,
+      RemoveChargeAnnotation = ifelse(is.null(input$seqCharge), TRUE, input$seqCharge == FALSE),
       WrapLength = 15
     )
     

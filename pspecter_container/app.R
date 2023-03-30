@@ -229,22 +229,17 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
          
        # Most Abundant Isotope switch, Trace switch, and Pre MZ range
        numericInput("MPpercdiff", "Filter by Percent Error", 25),
-       numericInput("MPwinsize", "Set MS1 Window Size", 3),
-       actionButton("MPlargePre", "MS1 Full Screen"),
-       actionButton("MPlargeNext", "Next MS1 Full Screen")
+       numericInput("MPwinsize", "Set MS1 Window Size", 3)
        
       ),
        
       bsCollapsePanel("Other Figures",
-                 
-         # Set slider for bar chart counting by fragment or not
-         uiOutput("ssBarCTFragSWITCH"), 
        
          # Set slider for adding annotations for PTMs
          uiOutput("ssAnoPTMSWITCH"),
          
-         # Enable or disable isotopes for summary graphics 
-         uiOutput("ssISOgraphsSWITCH")
+         # Set slider for adding charges to sequence plots
+         uiOutput("seqChargeSWITCH")
          
       )
       
@@ -315,38 +310,43 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
       # XIC: Visualize the intensity versus retention time graphs across all MS1 for 
       # a particular MS2's most abundant isotope. 
       # Error Map: The ppm errors for each identified spectrum's peak
-      column(7, 
-       tabsetPanel(id = "SStabs",
-         tabPanel("Spectrum", jqui_resizable(plotlyOutput("ssSpectrum", width = "100%", height = "300px")) 
-                  %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-         tabPanel("Error Map", jqui_resizable(plotlyOutput("ErrorMap", width = "100%", height = "300px")) 
-                  %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-         tabPanel("XIC", htmlOutput("warnXIC"),  
-                  jqui_resizable(plotlyOutput("XIC", width = "100%", height = "300px")) 
-                  %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))))),
+      column(9, 
+         tabsetPanel(id = "SStabs",
+           tabPanel("Spectrum", jqui_resizable(plotlyOutput("ssSpectrum", width = "100%", height = "300px")) 
+                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
+           tabPanel("Error Map", jqui_resizable(plotlyOutput("ErrorMap", width = "100%", height = "300px")) 
+                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
+           tabPanel("XIC", htmlOutput("warnXIC"),  
+                    jqui_resizable(plotlyOutput("XIC", width = "100%", height = "300px")) 
+                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))))
+      ),
         
       # Sequence View: A tabular display which includes an sequence view, 
       # interactive table with clicking functionality, 
       # and a bar chart which shows the number of fragment types.
-      column(5, 
-       tabsetPanel(id = "PTBtabs",
-         tabPanel("MS1", jqui_resizable(plotlyOutput("ssMatPre", width = "125%", height = "300px")) 
-                  %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-         tabPanel("Next MS1", jqui_resizable(plotlyOutput("ssMatNext", width = "125%", height = "300px")) 
-                  %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-         tabPanel("Filter Ions", jqui_resizable(DT::DTOutput("ssSeqTable", width = "125%", height = "300px"))))),
+      column(3, 
+       jqui_draggable(
+         tabsetPanel(id = "PTBtabs",
+           tabPanel("MS1", jqui_resizable(plotlyOutput("ssMatPre", width = "150%", height = "300px")) 
+                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
+           tabPanel("Next MS1", jqui_resizable(plotlyOutput("ssMatNext", width = "150%", height = "300px")) 
+                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
+           tabPanel("Filter Ions", jqui_resizable(DT::DTOutput("ssSeqTable", width = "125%", height = "300px"))))
+       )
+      ),
         
       # Scan View: The datatable with information as determined by the checkboxes
       # with a sequence tab to visualize the ions with the smallest ppm error. 
       column(12, 
-       tabsetPanel(id = "SSAtabs",      
-         tabPanel("Scan", htmlOutput("coverage"), 
-                  jqui_resizable(DT::DTOutput("ssScan", width = "115%", height = "250px"))),
-         tabPanel("Sequence", jqui_resizable(plotOutput("ssSeqFlag", width = "115%", height = "400px")) 
-                  %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-         tabPanel("Ion Annotation", jqui_resizable(DT::DTOutput("ssAllFrag", width = "115%", height = "250px"))),
-         tabPanel("Ion Barplot", jqui_resizable(plotlyOutput("ssSeqBar", width = "115%", height = "300px")) 
-                  %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")))))))),
+         tabsetPanel(id = "SSAtabs",      
+           tabPanel("Scan", htmlOutput("coverage"), 
+                    jqui_resizable(DT::DTOutput("ssScan", width = "115%", height = "250px"))),
+           tabPanel("Sequence", jqui_resizable(plotOutput("ssSeqFlag", width = "115%", height = "400px")) 
+                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
+           tabPanel("Ion Annotation", jqui_resizable(DT::DTOutput("ssAllFrag", width = "115%", height = "250px"))),
+           tabPanel("Ion Barplot", jqui_resizable(plotlyOutput("ssSeqBar", width = "115%", height = "300px")) 
+                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))))
+      )))),
 
    #############################
    ## TEST PTM USER INTERFACE ##
