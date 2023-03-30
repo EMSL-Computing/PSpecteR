@@ -116,20 +116,11 @@ list(
   
   # Render the Annotate Spectra Widget
   output$ssLetterSWITCH <- renderUI({
-    SL <- materialSwitch("ssLetter", label = HTML("<strong>Annotate Spectra</strong>"), value = F, status = "success")
+    SL <- materialSwitch("ssLetter", label = HTML("<strong>Annotate Spectra</strong>"), value = T, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(SL, Desc[Desc$Name == "ssLetter", "Title"], Desc[Desc$Name == "ssLetter", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
     } else {SL}
-  }),
-  
-  # Render the Real Time Editing Widget
-  output$RealTimeSWITCH <- renderUI({
-    RTE <- materialSwitch("RealTime", HTML("<strong>Freeze Interactive Spectra Editing</strong>"), value = F, status = "success")
-    if (is.null(input$infoMode) == F && input$infoMode == T) {
-      popify(RTE, Desc[Desc$Name == "RealTime", "Title"], Desc[Desc$Name == "RealTime", "Description"],
-             options = list(selector = '.material-switch'), placement = 'right')
-    } else {RTE}
   }),
   
   # Render the Bar: Count Per Fragment Widget
@@ -173,7 +164,7 @@ list(
     
     # Set variable to contain the checkbox information 
     selectIonUI <- selectInput("ionGroups", "Ion Type", c("a", "b", "c", "x", "y", "z",
-      paste0(revals$AddedIons$Ion, revals$AddedIons$Annotation)), selected = getActMetIon(), multiple = T)
+      paste0(revals$AddedIons$Ion, revals$AddedIons$Annotation)), selected = GET_activation_method_ions(), multiple = T)
     
     # Show pop up box if pop-ups are enabled
     if (is.null(input$infoMode) == F && input$infoMode == T) {
@@ -188,8 +179,8 @@ list(
     seq <- ""
     
     # Change sequence to actual seq if it exists
-    scan <- getScan()
-    if (is.null(scan) == F) {seq <- scan[getScanClick(), "Sequence"]}
+    scan <- GET_scan_metadata()
+    if (is.null(scan) == F) {seq <- scan[GET_scan_click(), "Sequence"]}
     
     SSseqUI <- textInput("ssNewSeq", "Test Different Sequence", value = seq, placeholder = "Enter Amino Acid Sequence")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
@@ -200,7 +191,7 @@ list(
   
   # Determine X range for spectra
   output$ssSpecXRange <- renderUI({
-    peak <- getSSPeak()
+    peak <- GET_peak_data()
     if (is.null(peak)) {return(NULL)}
     highest <- round(max(peak$mz), 3)
     sliderInput("ssSpecX", "M/Z Range", 0, highest, c(0, highest), 0.01, width = "150%")
@@ -208,7 +199,7 @@ list(
   
   # Determine Y range for spectra
   output$ssSpecYRange <- renderUI({
-    peak <- getSSPeak()
+    peak <- GET_peak_data()
     if (is.null(peak)) {return(NULL)}
     highest <- round(max(peak$intensity))
     sliderInput("ssSpecY", "Intensity Range", 0, highest, c(0, highest), 1, width = "150%")
@@ -234,45 +225,36 @@ list(
              options = list(pageLength = 5, scrollX = T))
   }), 
   
+  observeEvent(input$debug, {browser()}),
+  
   # This will generate the spectrum view
   output$ssSpectrum <- renderPlotly({
-    
-    # Have switch enable Real-Time Editing
-    if (is.null(input$RealTime) == F && input$RealTime == F) {plots$currSPEC} else {
-        
-      # Get the peak data, scan number, fragments, and rows from "Select Ions" table
-      if (is.null(GET_peak_data()) || nrow(GET_peak_data()) == 0) {return(NULL)}
-      
-      # Pull peak data 
-      peak <- GET_peak_data()  
-      
-      # Pull matched peaks 
-      matched_peaks <- GET_matched_peaks()
-      
-      # If there are more than 50,000 peaks in the spectra, let user know. 
-      if (nrow(peak) > 5e4) {
-        sendSweetAlert(session, "Plotting more than 50,000 peaks", 
-          paste("This may take a while to generate and the resulting spectra",
-            "will be very busy. Consider setting filters in 1. Filter Settings."))
-      }
-      
-      #browser()
-      
-      # Make plot 
-      spectra_plot <- annotated_spectrum_plot(
-        PeakData = peak,
-        MatchedPeaks = matched_peaks,
-        IncludeIsotopes = ifelse(is.null(input$ssIsoSpectra), TRUE, input$ssIsoSpectra),
-        Interactive = TRUE
-      )
-      
-      # Save plot
-      plots$currSPEC <- spectra_plot
 
-      spectra_plot
-      
+    # Get the peak data, scan number, fragments, and rows from "Select Ions" table
+    if (is.null(GET_peak_data()) || nrow(GET_peak_data()) == 0) {return(NULL)}
+    
+    # If there are more than 50,000 peaks in the spectra, let user know. 
+    if (nrow(GET_peak_data()) > 5e4) {
+      sendSweetAlert(session, "Plotting more than 50,000 peaks", 
+        paste("This may take a while to generate and the resulting spectra",
+          "will be very busy. Consider setting filters in 1. Filter Settings."))
     }
     
+    # Make plot
+    thePlot <- annotated_spectrum_plot(
+      PeakData = GET_peak_data(),
+      MatchedPeaks = GET_matched_peaks(),
+      IncludeLabels = ifelse(is.null(input$ssLetter), TRUE, input$ssLetter),
+      LabelSize = ifelse(is.null(input$ssAnnoSize), 8, abs(input$ssAnnoSize)),
+      LabelDistance = ifelse(is.null(input$ssLabDist), 0.5, abs(input$ssLabDist)),
+      Interactive = TRUE
+    )
+    
+    # Save plot
+    plots$currSPEC <- thePlot
+    
+    return(thePlot)
+      
   }),
   
   # Generates a tables of fragment data such as its charge, name, modifications, etc.

@@ -5,6 +5,35 @@
 
 list(
   
+  # Get the ions associated with the activation method. Default is all values.
+  GET_activation_method_ions <- reactive({
+    
+    # Declare ions variable to hold all ion types
+    Ions <- c("a", "b", "c", "x", "y", "z", "Spec")
+    
+    # Test for scan data
+    if (is.null(msPath())) {return(Ions)}
+    
+    # Get most frequent activation method
+    AM <- GET_scan_metadata()[GET_scan_click(), "Activation Method"]
+    
+    # Remove nulls
+    if (is.null(AM)) {return(Ions)}
+    
+    # Autoselect specific ions for activation methods
+    if (AM == "HCD") {Ions <- c("b", "y")} else 
+    if (AM == "CID") {Ions <- c("a", "b", "y")} else
+    if (AM == "ETD") {Ions <- c("b", "c", "y", "z")} 
+    
+    # Include added ions if they exist
+    if (is.null(revals$AddedIons) == F) {
+      Ions <- c(Ions, paste0(revals$AddedIons$Ion, revals$AddedIons$Annotation))
+    }
+    
+    return(Ions)
+    
+  }),
+  
   # Get matched peaks 
   GET_matched_peaks <- reactive({
     
@@ -13,7 +42,6 @@ list(
     if (is.null(GET_peak_data())) {return(NULL)}
     if (is.null(input$ssTolerance)) {return(NULL)}
     if (is.null(input$ionGroups)) {return(NULL)}
-    if (is.null(input$ssISOspectra)) {CalcIso <- TRUE} else {CalcIso <- !input$ssIsoSpectra}
     if (is.null(input$ssCorrScoreFilter)) {return(NULL)}
     if (is.null(input$ssAlgorithm)) {return(NULL)}
     if (is.null(input$ssNewSeq)) {return(NULL)}
@@ -23,7 +51,7 @@ list(
       PeakData = GET_peak_data(),
       PPMThreshold = input$ssTolerance,
       IonGroups = input$ionGroups,
-      CalculateIsotopes = CalcIso,
+      CalculateIsotopes = ifelse(is.null(input$ssISOspectra), TRUE, input$ssISOspectra),
       MinimumAbundance = 0.1,
       CorrelationScore = input$ssCorrScoreFilter,
       MatchingAlgorithm = input$ssAlgorithm, 

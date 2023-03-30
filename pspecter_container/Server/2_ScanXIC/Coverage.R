@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_07_15
+## Last Updated: 2023_04_01
 
 # DESCRIPTION: Contains coverage and number of peaks calculations
 
@@ -10,15 +10,15 @@ output$coverage <- renderText({
   numPeaks <- NULL
   
   # Get Scan Data
-  scan <- getScan()
+  scan <- GET_scan_metadata()
   if (is.null(scan) == F) {
-    clicked <- getScanClick()
-    peak <- getSSPeak()
+    clicked <- GET_scan_click()
+    peak <- GET_peak_data()
     peak <- peak[peak$intensity > 0,]
     numPeaks <- nrow(peak)
   
   # Get Fragment Data to Calculate Coverage 
-  if (is.null(getFrag()) == F) { 
+  if (is.null(GET_matched_peaks()) == F) { 
     
     # Get the sequence length, removing one as the first amino acid is not countedin the coverage calculation
     seqLen <- nchar(scan[clicked, "Sequence"]) - 1
@@ -27,7 +27,7 @@ output$coverage <- renderText({
     if (is.na(seqLen)) {seqLen <- nchar(revals$testSeq) - 1}
     
     # Get all nposition data of identified fragments, remove npos 1, and take the length
-    covLen <- length(unique(getFrag()$npos[getFrag()$npos != 1]))
+    covLen <- length(unique(GET_matched_peaks()$npos[GET_matched_peaks()$npos != 1]))
     
     coverage <- paste(round((covLen / seqLen * 100), 1), "%", sep = "")
     

@@ -21,6 +21,9 @@ library(data.table)
 library(plotly)
 library(DT)
 
+# Add support packages
+library(xlsx)
+
 # If the test files are not in the right directory, copy and move them 
 #source(file.path("Server", "PrepTestFiles.R"), local = T)$value
 #prepTestFiles()
@@ -200,7 +203,8 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        
        # Add an action button for adding modifications or restoring the sequence
        list(actionButton("ssASeq", "Apply Seq"),
-            actionButton("ssRSeq", "Restore Seq"))
+            actionButton("ssRSeq", "Restore Seq"),
+            actionButton("debug", "debug"))
        
      ),
      
@@ -210,24 +214,16 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        bsCollapse(bsCollapsePanel("Spectrum Plot Settings",               
                      
          # Set the font size of the annotated
-         sliderInput("ssAnnoSize", "Label Size", 2, 15, 6, 1),
+         numericInput("ssAnnoSize", "Label Size", 8, 0, 10, 1),
                        
          # Set the label relative label distance
-         sliderTextInput("ssLabDist", "Set Relative Label Distance", 
-                         c("Very Close", "Close", "Near", "Far", "Very Far"),
-                         selected = "Close"),
+         numericInput("ssLabDist", "Set Label Distance (M/Z)", 0, 0, 10, 0.1),
          
          # Enable letter annotation on the spectrum
          uiOutput("ssLetterSWITCH"), 
-                
-         # Set slider for real-time edits of spectra
-         uiOutput("RealTimeSWITCH"),
           
          # Enable or disable isotopes for spectra
-         uiOutput("ssISOspectraSWITCH"),
-       
-        # Place spectra in large pop up window
-        actionButton("ssLargeSpec", "See the Spectrum in Full Screen")
+         uiOutput("ssISOspectraSWITCH")
         
       ),
      
@@ -366,7 +362,8 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
       bsCollapse(multiple = T, open = list("1. Set Sequence"),
        bsCollapsePanel("1. Set Sequence", htmlOutput("VPscanWarn"), hr(),
          uiOutput("VPseq"), htmlOutput("VPnsWarn"), hr(), 
-         actionButton("VPrseq", "Restore Seq")),
+         actionButton("VPrseq", "Restore Seq")
+       ),
        bsCollapsePanel("2. Set Search Parameters", uiOutput("VPsetparams")),
        bsCollapsePanel("3. Dynamic Modification Search", uiOutput("VPselect"), 
          list(actionButton("VPclear", "Clear"), actionButton("VPcommon", "Autoselect Common Modifications")), hr(), 
@@ -639,7 +636,7 @@ server <- function(input, output, session) {
   ms1ftPath <- reactiveVal(NULL)
   
   # Load description data 
-  Desc <- data.frame(read_excel(file.path("Server", "Pop_Up_Functions", "Function_Descriptions.xlsx")))
+  Desc <- data.frame(xlsx::read.xlsx(file.path("Server", "Pop_Up_Functions", "Function_Descriptions.xlsx"), 1))
   
   # Set environment variables
   #Environment <- read.csv("/SetEnvironment.csv", header = T)
@@ -662,34 +659,7 @@ server <- function(input, output, session) {
   ## GETTER FUNCTIONS ## 
   ######################
   
-  # Get the filtering getters: getFileType, getActMet, getActMetIon, 
-  # getIntenMin, and getTol.
-  source(file.path("Server", "Get", "Get_Filters.R"), local = T)$value
-  
-  # Get the MS-based getters: getRAW, getRAWScanSM, getMZMS, getHeader, getSSPeak, 
-  # getAllMS1, getMS1DF. 
-  source(file.path("Server", "Get", "Get_MS.R"), local = T)$value
-  
-  # Get all the ID-based getters: getID, getModDF, getFrag, getOriSDF, getFlagDF, 
-  # getErrorHM, and getPTID.
-  source(file.path("Server", "Get", "Get_ID.R"), local = T)$value
-  
-  # Get fasta file
-  getFasta <- reactive({
-    req(fastaPath())
-    return(read.fasta(fastaPath(), seqtype = "AA", as.string = T))
-  })
-  
-  # Get objects that contain a mix of either MS, ID, or FASTA data. Included:
-  # getHDID, and getProteinTree.
-  source(file.path("Server", "Get", "Get_Multiple.R"), local = T)$value
-  
-  # Get feature plot objects
-  source(file.path("Server", "Get", "Get_Features.R"), local = T)$value
-  
-  # Get Unimod Glossary
-  source(file.path("Server", "Get", "Get_Glossary.R"), local = T)$value
-  
+  # Source all getter functions
   source(file.path("Server", "Get.R"), local = T)$value
   
   #############################
