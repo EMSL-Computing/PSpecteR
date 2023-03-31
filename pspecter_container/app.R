@@ -56,19 +56,17 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
     # Add Welcome Page GIF
     column(12, img(src = "WelcomeToPSpecteR.gif", contentType = "image/gif",
       width = "600px", height = "294px", align = "left")), 
+    
     column(12, img(src = "Divider_Line.png", 
-      width = "600px", contentType = "image/png", align = "left")),
+      width = "800px", contentType = "image/png", align = "left")),
     
     # Add Welcome Page PNG with buttons
-    column(12, imgRender("AppFunctions", "WelcomeImage/AppFunctions.png", "600px", "75px")),
-    column(2, imgRender("Page1", "WelcomeImage/Upload.png", "200px", "200px")),
     column(2, imgRender("Page2", "WelcomeImage/MSnXIC.png", "200px", "200px")),
-    column(8, imgRender("Page3", "WelcomeImage/VisPTM.png", "200px", "200px")),
+    column(2, imgRender("Page3", "WelcomeImage/VisPTM.png", "200px", "200px")),
     column(2, imgRender("Page4", "WelcomeImage/ProteinCoverage.png", "200px", "200px")),
-    column(2, imgRender("Page5", "WelcomeImage/DatabaseSearch.png", "200px", "200px")),
-    column(8, imgRender("Page6", "WelcomeImage/AdditionalPlots.png", "200px", "200px")),
+    column(6, imgRender("Page6", "WelcomeImage/AdditionalPlots.png", "200px", "200px")),
     column(12, img(src = "Divider_Line.png", contentType = "image/png", 
-      width = "600px", align = "left")),
+      width = "800px", align = "left")),
     
     # Add UI for the manual and citation information
     column(12, htmlOutput("citation")), column(12, htmlOutput("manual")))),
@@ -185,8 +183,6 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
      bsCollapsePanel("Peak Matching Settings", 
         
        # Allows users to select how far off the experimental fragment value can be from the theoretical fragment value.
-       pickerInput("ssAlgorithm", "Select Algorithm", choices = list("Closest Peak (Top-Down)" = "closest peak", "Highest Abundance (Bottom-Up)" = "highest abundance"), 
-                   selected = "Closest Peak (Top-Down)"),
        numericInput("ssTolerance", "M/Z Tolerance (PPM)", 10, min = 0.01, max = 100, step = 0.1),
        numericInput("ssIntenMin", "Intensity Minimum", 100, min = 0, max = 1e6, step = 100),
        numericInput("ssCorrScoreFilter", "Minimum Pearson Correlation Score", 0, min = 0, max = 1, step = 0.01),
@@ -262,15 +258,19 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
         # Select columns for fragment table
         pickerInput("ssFragColumns", "Select Fragment Columns", 
            options = list(`live-search` = T, `actions-Box` = T),
-           c("Type" = "1", "Pos" = "2", "Pep" = "3", "Z" = "4", 
-             "Iso" = "5", "MZ" = "6", "CorrScore" = "7"),
-           selected = c("1", "2", "3", "4", "5", "6", "7"), multiple = T)),
+           c("Ion", "N Position", "Residue", "Z", "Isotope", "M/Z Experimental", "Correlation Score"),
+           selected = c("Ion", "N Position", "Residue", "Z", "Isotope", "M/Z Experimental", "Correlation Score"), multiple = T)
+       
+     ),
      
      # XIC Settings
      bsCollapsePanel("XIC Settings", 
                      
-       # XIC Tolerance
-       numericInput("tolXIC", "Set XIC Tolerance (ppm)", value = 10, step = 1), hr(),
+       # Set mass and charge
+       uiOutput("massXIC"),
+                     
+       # Set a retention time window 
+       numericInput("rtXIC", "Retention Time Window (min)", 2, 0.1, 100, 1),
        
        # Pick the number of isotopes to plot
        pickerInput("isoXIC", label = "Select Isotopes", choices = 0:5, 
@@ -278,10 +278,12 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        
        # Pick the number of charge states to plot
        pickerInput("chargeTraceXIC", label = "Select Charges", choices = 1:3,
-                   selected = 1:2, multiple = T, options = list(`actions-Box` = T)), hr(),
+                   selected = 1:2, multiple = T, options = list(`actions-Box` = T)),
        
-       # Set mass and charge
-       uiOutput("massXIC"), uiOutput("chargeXIC")),      
+       # Line for smooth line 
+       uiOutput("XICsmoothSWITCH")
+       
+     ),      
 
      # Export Images & Data
      bsCollapsePanel("Snapshot Images and Export Data", bsCollapse(multiple = T, 
@@ -316,7 +318,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
                     %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
            tabPanel("Error Map", jqui_resizable(plotlyOutput("ErrorMap", width = "100%", height = "300px")) 
                     %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-           tabPanel("XIC", htmlOutput("warnXIC"),  
+           tabPanel("XIC", 
                     jqui_resizable(plotlyOutput("XIC", width = "100%", height = "300px")) 
                     %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))))
       ),
@@ -426,11 +428,11 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
       mainPanel(
         tabsetPanel(id = "PTtabs",
           tabPanel("Match", htmlOutput("PTnoFAwarn"),
-                   plotlyOutput("PTMatch", width = "100%", height = "250px")
+                   jqui_resizable(plotlyOutput("PTMatch", width = "100%", height = "350px"))
                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-          tabPanel("Bar", plotlyOutput("PTBar", width = "100%", height = "250px")
+          tabPanel("Bar", plotlyOutput("PTBar", width = "100%", height = "350px")
                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-          tabPanel("Literature Sequence", plotlyOutput("LSeq", width = "100%", height = "250px") 
+          tabPanel("Literature Sequence", plotlyOutput("LSeq", width = "100%", height = "350px") 
                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")))),
         DT::dataTableOutput("PTTable", width = "100%", height = "250px")))),
    

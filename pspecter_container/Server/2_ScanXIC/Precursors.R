@@ -12,15 +12,19 @@ list(
   # Generates the matched precursor graphic for the previous MS scan
   output$ssMatPre <- renderPlotly({
     
-    # If no ScanMetadata, return NULL
+    # If no ScanMetadata or Sequence, return NULL
     if (is.null(GET_scan_metadata())) {return(NULL)}
-    if (is.null(input$ssNewSeq)) {return(NULL)}
+    if (is.null(GET_sequence())) {return(NULL)}
     
+    # Return NULL if the scan number is an MS1 scan 
+    if (GET_scan_number() %in% attributes(GET_scan_metadata())$pspecter$MS1Scans) {return(NULL)}
+    
+    # Otherwise, make plot
     Pre <- ms1_plots(
       ScanMetadata = GET_scan_metadata(),
       ScanNumber = GET_scan_number(),
       Window = ifelse(is.null(input$MPwinsize), 3, input$MPwinsize),
-      Sequence = input$ssNewSeq,
+      Sequence = GET_sequence(),
       IsotopicPercentageFilter = ifelse(is.null(input$MPpercdiff), 25, input$MPpercdiff),
       Interactive = TRUE
     )[[1]] 
@@ -34,15 +38,18 @@ list(
   # Generates the matched precursor graphic for the next MS1 scan
   output$ssMatNext <- renderPlotly({
     
-    # If no ScanMetadata, return NULL
+    # If no ScanMetadata or Sequence, return NULL
     if (is.null(GET_scan_metadata())) {return(NULL)}
-    if (is.null(input$ssNewSeq)) {return(NULL)}
+    if (is.null(GET_sequence())) {return(NULL)}
+    
+    # Return NULL if the scan number is an MS1 scan 
+    if (GET_scan_number() %in% attributes(GET_scan_metadata())$pspecter$MS1Scans) {return(NULL)}
     
     Next <- ms1_plots(
       ScanMetadata = GET_scan_metadata(),
       ScanNumber = GET_scan_number(),
       Window = ifelse(is.null(input$MPwinsize), 3, input$MPwinsize),
-      Sequence = input$ssNewSeq,
+      Sequence = GET_sequence(),
       IsotopicPercentageFilter = ifelse(is.null(input$MPpercdiff), 25, input$MPpercdiff),
       Interactive = TRUE
     )[[2]]
@@ -51,12 +58,6 @@ list(
     
     return(Next)
 
-  }),
-   
-  # Plot new previous precursor
-  output$bigMPLP <- renderPlotly({plotly::toWebGL(plots$currMPPRE)}),
-  
-  # Plot new previous precursor
-  output$bigMPNP <- renderPlotly({plotly::toWebGL(plots$currMPNEXT)})
+  })
   
 )

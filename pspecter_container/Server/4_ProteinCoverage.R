@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_12_29
+## Last Updated: 2023_04_01
 
 # DESCRIPTION: Contains all the protein coverage tables and figures
 
@@ -34,6 +34,14 @@ list(
   
     # Set the PT Amino Acid Position (X variable) Range
   output$PTxRange <- renderUI({
+    
+    # Return null if no peptide coverage
+    if (is.null(GET_peptide_coverage())) {return(NULL)}
+    
+    
+    browser()
+    
+    
     PT <- getProteinTree()
     if (is.null(PT)) {return(NULL)}
     highest <- nchar(PT[PT$Scan == 1,]$Sequence) + 1
@@ -43,6 +51,13 @@ list(
   
   # Set the PT Scan Number (Y variable) Range
   output$PTyRange <- renderUI({
+    
+    # Return null if no peptide coverage
+    if (is.null(GET_peptide_coverage())) {return(NULL)}
+    
+    
+    browser()
+    
     PT <- getProteinTree()
     if (is.null(PT)) {return(NULL)}
     highest <- max(PT$Scan, na.rm = T) + 1
@@ -62,18 +77,23 @@ list(
 
   # Creates table with identified protein data 
   output$PTTable <- DT::renderDataTable({
-    PTID <- getPTID()
-    if (is.null(PTID)) {return(NULL)}
-    PTID <- subset(PTID, PTID$Number.Of.Peptides > 0)
-    datatable(PTID, rownames = F, filter = 'top', options = list(pageLength = 4),
+    
+    # If no protein table, return NULL 
+    if (is.null(GET_protein_table())) {return(NULL)}
+    
+    datatable(GET_protein_table(), rownames = F, filter = 'top', options = list(pageLength = 4),
               selection = list(mode = 'single', selected = 1))
   }),
   
   # Reveal protein sequence
   output$LSeq <- renderPlotly({
     
-    # Require proteinTree
-    req(getProteinTree())
+    # Return null if no peptide coverage
+    if (is.null(GET_peptide_coverage())) {return(NULL)}
+    
+    
+    browser()
+    
     proteinTree <- getProteinTree()
     
     # This is proteinTree
@@ -141,39 +161,30 @@ list(
   # Make chart of protein tree matches
   output$PTMatch <- renderPlotly({
     
-    req(getProteinTree(), getPTID())
-    PT <- getProteinTree()
-    PTID <- getPTID()
-    
-    # Get clicked row
-    clicked <- input$PTTable_row_last_clicked
-    if (is.null(clicked)) {clicked = 1}
-    
-    # Set ranges, and then remove literature sequence
-    xrange <- c(0, nchar(PT[PT$Scan == 1,]$Sequence) + 1)
-    yrange <- c(0, max(PT$Scan, na.rm = T))
-    PT <- PT[PT$Scan != 1,]
-    
-    # Add a grouping variable and melt PT dataframe
-    PT$Grouping <- as.factor(1:nrow(PT))
-    PT <- PT %>% melt(id.vars = c("Sequence", "Scan", "Dir", "Color",
-                            "Grouping")) %>% group_by(Grouping) 
+    # Return null if no peptide coverage
+    if (is.null(GET_peptide_coverage())) {return(NULL)}
     
     # Make the plotly
-    p <- plot_ly(data = PT, x = ~value, y = ~Scan, hoverinfo = "text",
-            type = "scatter", mode = "lines", line = list(color = ~Color),
-            showlegend = F, hovertext = paste("Scan:", PT$Scan, "<br>NC Seq:", PT$Sequence)
-    ) %>% layout(xaxis = list(title = "Amino Acid Position", range = xrange), 
-                 yaxis = list(title = "Scan Number", range = yrange),
-                 title = paste("ID:", PTID[clicked, 1]))
+    p <- coverage_plot(
+      PeptideCoverage = GET_peptide_coverage(),
+      Interactive = T,
+      ColorByScore = "Score"
+    )
     
     plots$currMATCH <- p
     
     plotly::toWebGL(p)
+    
   }),
   
   # Makes barchart of protein tree data 
   output$PTBar <- renderPlotly({
+    
+    # Return null if no peptide coverage
+    if (is.null(GET_peptide_coverage())) {return(NULL)}
+    
+    
+    browser()
     
     proteinTree <- getProteinTree()
     if (is.null(proteinTree)) {return(NULL)}
@@ -228,11 +239,11 @@ list(
   # Print Q Value Warning
   output$QValWarn <- renderText({
     
-    scan <- getScan()
+    scan <- GET_scan_metadata()
     if (is.null(scan)) {return(NULL)}
     
     # If all the Q-Values are NA give this warning
-    if ((FALSE %in% unique(is.na(scan$Q.Value))) == F) {
+    if ((FALSE %in% unique(is.na(scan$`Q Value`))) == F) {
       HTML('<strong><span style="color: rgb(184, 49, 47); background-color: rgb(247, 218, 100);">
            No Q-Values provided. Filtering disabled. </span></strong>')
     } else {return(NULL)}

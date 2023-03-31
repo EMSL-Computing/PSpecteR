@@ -18,7 +18,7 @@ list(
     AM <- GET_scan_metadata()[GET_scan_click(), "Activation Method"]
     
     # Remove nulls
-    if (is.null(AM)) {return(Ions)}
+    if (is.na(AM)) {return(Ions)}
     
     # Autoselect specific ions for activation methods
     if (AM == "HCD") {Ions <- c("b", "y")} else 
@@ -40,11 +40,10 @@ list(
     # Return NULL if any of the following are missing
     if (is.null(GET_scan_metadata())) {return(NULL)}
     if (is.null(GET_peak_data())) {return(NULL)}
+    if (is.null(GET_sequence())) {return(NULL)}
     if (is.null(input$ssTolerance)) {return(NULL)}
     if (is.null(input$ionGroups)) {return(NULL)}
     if (is.null(input$ssCorrScoreFilter)) {return(NULL)}
-    if (is.null(input$ssAlgorithm)) {return(NULL)}
-    if (is.null(input$ssNewSeq)) {return(NULL)}
     
     get_matched_peaks(
       ScanMetadata = GET_scan_metadata(),
@@ -54,8 +53,8 @@ list(
       CalculateIsotopes = ifelse(is.null(input$ssISOspectra), TRUE, input$ssISOspectra),
       MinimumAbundance = 0.1,
       CorrelationScore = input$ssCorrScoreFilter,
-      MatchingAlgorithm = input$ssAlgorithm, 
-      AlternativeSequence = input$ssNewSeq
+      MatchingAlgorithm = "closest peak", 
+      AlternativeSequence = GET_sequence()
     )
     
   }), 
@@ -111,8 +110,15 @@ list(
   # Get protein ID
   GET_protein_ID <- reactive({
     
-    browser()
+    # Figure out the protein ID if the protein table is not NULL
+    if (is.null(GET_protein_table())) {return(NULL)}
     
+    # Get clicked position    
+    clicked <- input$PTTable_row_last_clicked
+    if (is.null(clicked)) {clicked <- 1}
+  
+    return(unlist(GET_protein_table()[clicked, "Protein"]))
+  
   }),
   
   # Get protein table
@@ -124,7 +130,7 @@ list(
     
     get_protein_table(
       ScanMetadata = GET_scan_metadata(),
-      FastaPath = fastaPath()
+      FASTAPath = fastaPath()
     )
     
   }),
@@ -158,6 +164,42 @@ list(
     get_scan_metadata(
       MSPath = msPath(),
       IDPath = idPath()
+    )
+    
+  }),
+  
+  # Get sequence - used by many functions. Default should always be the identified
+  # sequence if there is one
+  GET_sequence <- reactive({
+    
+    # Return null if scan metadata
+    if (is.null(GET_scan_metadata())) {return(NULL)}
+    
+    # Extract a potential sequence - either from the file or overwritten by user 
+    Seq <- ifelse(is.null(revals$testSeq), unlist(GET_scan_metadata()[GET_scan_click(), "Sequence"]), revals$testSeq)
+    
+    # Return NULL if no sequence 
+    if (is.null(Seq) || is.na(Seq)) {return(NULL)}
+    
+    # Otherwise, return this sequence
+    return(Seq)
+    
+  }),
+
+  
+  # Get XIC
+  GET_XIC <- reactive({
+    
+    # If no ScanMetadata or PreMZ, return NULL 
+    if (is.null(GET_scan_metadata())) {return(NULL)}
+
+    # Return XIC object
+    get_xic(
+      ScanMetadata = GET_scan_metadata(),
+      MZ = ifelse(is.null(input$premzXIC), unlist(GET_scan_metadata()[GET_scan_click(), "Precursor M/Z"]), input$premzXIC),
+      RTRange = c(-1 * input$rtXIC, input$rtXIC) + unlist(GET_scan_metadata()[GET_scan_click(), "Retention Time"]),
+      IsotopeNumber = as.numeric(input$isoXIC),
+      Charges = as.numeric(input$chargeTraceXIC)
     )
     
   })

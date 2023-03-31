@@ -228,10 +228,36 @@ list(
           "will be very busy. Consider setting filters in 1. Filter Settings."))
     }
     
+    # Extract peak data and matched peaks
+    peaks <- GET_peak_data()
+    matched <- GET_matched_peaks()
+    
+    # If rows in the table have been clicked, then filter down 
+    if (!is.null(input$ssSeqTable_rows_selected)) {
+      
+      # Get selected peaks 
+      rows <- input$ssSeqTable_rows_selected
+    
+      # Filter matches and peaks 
+      matched <- matched[rows, ]
+      peaks <- peaks[peaks$`M/Z` >= min(matched$`M/Z Experimental`) - 1 &
+                     peaks$`M/Z` <= max(matched$`M/Z Experimental`) + 1, ]
+      peaks <- rbindlist(
+        list(
+          data.table(min(matched$`M/Z Experimental`) - 1, 1, 1),
+          peaks,
+          data.table(max(matched$`M/Z Experimental`) + 1, 1, 1)
+        )
+      )
+      colnames(peaks) <- c("M/Z", "Intensity", "Abundance")
+      class(peaks) <- c(class(peaks), "peak_data")
+      
+    }
+    
     # Make plot
     thePlot <- annotated_spectrum_plot(
-      PeakData = GET_peak_data(),
-      MatchedPeaks = GET_matched_peaks(),
+      PeakData = peaks,
+      MatchedPeaks = matched, 
       IncludeIsotopes = ifelse(is.null(input$ssISOspectra), TRUE, input$ssISOspectra),
       IncludeLabels = ifelse(is.null(input$ssLetter), TRUE, input$ssLetter),
       LabelSize = ifelse(is.null(input$ssAnnoSize), 8, abs(input$ssAnnoSize)),
@@ -252,21 +278,25 @@ list(
     # Get Matched Peaks 
     if (is.null(GET_matched_peaks())) {return(NULL)}
     
-    browser()
+    # Pull fragments
+    frag <- GET_matched_peaks()
+    class(frag) <- c("data.frame", "data.table")
     
     # Round MZ so that it fits in the table, as well as correlation score
-    frag$mzExp <- round(frag$mzExp, 1)
-    frag$corrScore <- round(frag$corrScore, 2)
-    
-    # Frag peptide
-    frag$Peptide <- substr(rep(revals$testSeq, nrow(frag)), frag$npos, frag$npos)
+    frag$`M/Z Experimental` <- round(frag$`M/Z Experimental`, 1)
+    frag$`Correlation Score` <- round(frag$`Correlation Score`, 2)
     
     # Rename selected columns for table
-    frag <- frag[, c("type", "pos", "Peptide", "z", "isoPeak", "mz", "corrScore"), drop = F]
-    colnames(frag) <- c("Type", "Pos", "Pep", "Z", "Iso", "MZ", "CorrScore")
+    if (length(input$ssFragColumns) == 1) {
+      frag$Row <- 1:nrow(frag)
+      frag <- frag[, c("Row", input$ssFragColumns)]
+    } else {
+      frag <- frag[, input$ssFragColumns]
+    }
+
     
     # Display data table 
-    datatable(frag[, c(as.integer(input$ssFragColumns)), drop = FALSE], rownames = F, 
+    datatable(frag, rownames = F, 
               filter = "none", selection = list(mode = "multiple"),
               options = list(pageLength = 3, sDom = '<"top">lt<"bottom">p', `scrollX` = T))
   }),
@@ -384,24 +414,17 @@ list(
     # Get Scan Data
     scan <- GET_scan_metadata()
     if (is.null(scan) == F) {
+      
       clicked <- GET_scan_click()
       peak <- GET_peak_data()
-      peak <- peak[peak$intensity > 0,]
-      numPeaks <- nrow(peak)
+      
+      numPeaks <- attributes(GET_peak_data())$pspecter$NumberPeaksPostFilter
       
       # Get Fragment Data to Calculate Coverage 
       if (is.null(GET_matched_peaks()) == F) { 
         
-        # Get the sequence length, removing one as the first amino acid is not countedin the coverage calculation
-        seqLen <- nchar(scan[clicked, "Sequence"]) - 1
-        
-        # If a new sequence has been inputted, test that new sequence
-        if (is.na(seqLen)) {seqLen <- nchar(revals$testSeq) - 1}
-        
-        # Get all nposition data of identified fragments, remove npos 1, and take the length
-        covLen <- length(unique(GET_matched_peaks()$npos[GET_matched_peaks()$npos != 1]))
-        
-        coverage <- paste(round((covLen / seqLen * 100), 1), "%", sep = "")
+        # Get coverage
+        coverage <- attributes(GET_matched_peaks())$pspecter$Coverage
         
       }} 
     
