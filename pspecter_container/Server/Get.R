@@ -128,10 +128,13 @@ list(
     if (is.null(GET_scan_metadata)) {return(NULL)}
     if (is.null(fastaPath())) {return(NULL)}
     
-    get_protein_table(
+    tryCatch(get_protein_table(
       ScanMetadata = GET_scan_metadata(),
-      FASTAPath = fastaPath()
-    )
+      FASTAPath = fastaPath(),
+      QValueMaximum = input$PTToleranceQValue,
+      ScoreMaximum = as.numeric(input$PTToleranceScore),
+      RemoveContaminants = ifelse(is.null(input$PTCont), TRUE, input$PTCont)
+    ), error = function(e) {return(NULL)})
     
   }),
   

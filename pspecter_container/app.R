@@ -411,9 +411,11 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
             
     # Set the tolerance      
     sidebarLayout(sidebarPanel(
-      bsCollapse(multiple = T,
+      bsCollapse(multiple = T, open = "1. Protein Coverage Settings",
        bsCollapsePanel("1. Protein Coverage Settings",
-         numericInput("PTTolerance", "Q-Value Minimum", 0.10, min = 0, max = 1, step = 0.01),
+         selectInput("PTPlotScore", "Select a Score to Color the Coverage Plot by", c("Score", "QValue", "None"), "Score"),
+         numericInput("PTToleranceQValue", "Q-Value Maximum", 1, min = 0, max = 1, step = 0.01),
+         numericInput("PTToleranceScore", "Score Maximum (Enter values like: 1e-10)", 1, min = 0, max = 1),
          uiOutput("PTContSWITCH")),
        bsCollapsePanel("2. Take Image Snapshot",
                        actionButton("imgMATCH", "Match"),
@@ -427,12 +429,12 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
       # a nonoptional table below. 
       mainPanel(
         tabsetPanel(id = "PTtabs",
-          tabPanel("Match", htmlOutput("PTnoFAwarn"),
+          tabPanel("Coverage", htmlOutput("PTnoFAwarn"),
                    jqui_resizable(plotlyOutput("PTMatch", width = "100%", height = "350px"))
                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-          tabPanel("Bar", plotlyOutput("PTBar", width = "100%", height = "350px")
+          tabPanel("Bar", jqui_resizable(plotlyOutput("PTBar", width = "100%", height = "350px"))
                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-          tabPanel("Literature Sequence", plotlyOutput("LSeq", width = "100%", height = "350px") 
+          tabPanel("Literature Sequence", jqui_resizable(plotOutput("LSeq", width = "100%", height = "350px"))
                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")))),
         DT::dataTableOutput("PTTable", width = "100%", height = "250px")))),
    
@@ -511,7 +513,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
    navbarMenu("More",
               
     ########################################
-    ## A. SPECTRA METADATA USER INTERFACE ##
+    ## SPECTRA METADATA USER INTERFACE ##
     ########################################
     
     # This tab displays a feature plot for visualization of the entire spec file
@@ -520,7 +522,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
      # Remind users which tab they're in
      sidebarLayout(sidebarPanel(
        HTML('<p style="text-align: center;"><span style="font-size: 16pt;"><strong>
-             A. SPECTRA METADATA</strong></span></p>'),
+             SPECTRA METADATA PLOT</strong></span></p>'),
        bsCollapse(open = list("1. Subset Data", "2. Select Variables"),
         multiple = T, bsCollapsePanel("1. Subset Data", uiOutput(
           "SMscannumUI"),  uiOutput("SMmslevelUI")),
