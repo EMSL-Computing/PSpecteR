@@ -77,7 +77,7 @@ list(
     # Else, run function
     get_ms1ft(
       MS1FTPath = ms1ftPath(),
-      TargetsPath = NULL,
+      TargetsPath = targetsPath(),
       TrimColumns = TRUE
     )
     

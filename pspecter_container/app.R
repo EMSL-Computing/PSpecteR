@@ -415,16 +415,16 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
     # Set the tolerance      
     sidebarLayout(sidebarPanel(
       bsCollapse(multiple = T, open = "1. Protein Coverage Settings",
-       bsCollapsePanel("1. Protein Coverage Settings",
+       bsCollapsePanel("Protein Coverage Settings",
          selectInput("PTPlotScore", "Select a Score to Color the Coverage Plot by", c("Score", "QValue", "None"), "Score"),
          numericInput("PTToleranceQValue", "Q-Value Maximum", 1, min = 0, max = 1, step = 0.01),
          numericInput("PTToleranceScore", "Score Maximum (Enter values like: 1e-10)", 1, min = 0, max = 1),
          uiOutput("PTContSWITCH")),
-       bsCollapsePanel("2. Take Image Snapshot",
+       bsCollapsePanel("Take Image Snapshot",
                        actionButton("imgMATCH", "Match"),
                        actionButton("imgPTBAR", "Bar"),
                        actionButton("imgLSEQ", "Lit Seq")),
-       bsCollapsePanel("3. Export Data", 
+       bsCollapsePanel("Export Data", 
                        downloadButton("PTcsv", "Export Protein Coverage Data"))),
        htmlOutput("QValWarn"), width = 3),
       
@@ -543,21 +543,34 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
     tabPanel("ProMex Feature Map", sidebarLayout(sidebarPanel(
       HTML('<p style="text-align: center;"><span style="font-size: 16pt;"><strong>
             PROMEX FEATURE MAP</strong></span></p>'),
-      bsCollapse(multiple = T, open = list("1. Upload MS1FT"),
-         bsCollapsePanel("1. Upload MS1FT", 
-           shinyFilesButton("ms1ftFile", HTML("<strong>Search Folders:</strong> ms1ft"), 
-             "Choose MS1FT File: ms1ft", F), hr(),
-           textInput("ms1ftHandle", "...or type in the MS1FT file path", "", 
-             placeholder = "Type full MS1FT file path with forward slashes"),
-           list(actionButton("ms1ftHandleGo", "Use Path"), 
-                actionButton("ms1ftHandleClear", "Clear Path")), hr(),
+      bsCollapse(multiple = T, open = list("Upload MS1FT"),
+         bsCollapsePanel("Upload MS1FT", 
+                         
+           if (!LightVersion) {
+             tagList(
+               shinyFilesButton("ms1ftFile", HTML("<strong>Search Folders:</strong> ms1ft"), 
+                                "Choose MS1FT File: ms1ft", F), hr(),
+               textInput("ms1ftHandle", "...or type in the MS1FT file path", "", 
+                         placeholder = "Type full MS1FT file path with forward slashes"),
+               list(actionButton("ms1ftHandleGo", "Use Path"), 
+                    actionButton("ms1ftHandleClear", "Clear Path"), hr())
+             )
+           } else {
+             
+             tagList(
+               fileInput("ms1ftFile", "Upload MS1FT Data: ms1ft", accept = ".ms1ft"),
+               fileInput("targetsFile", "Upload IC Tagets Data: tsv", accept = ".tsv")
+             )
+             
+           },               
+                         
            uiOutput("testMS1FTSWITCH")),
-         bsCollapsePanel("2. Protein Annotation", uiOutput("PMproteinChoose")),
-         bsCollapsePanel("3. Take Image Snapshot", 
+         bsCollapsePanel("Protein Annotation", uiOutput("PMproteinChoose")),
+         bsCollapsePanel("Take Image Snapshot", 
            actionButton("imgPMFM", "ProMex Feature Map"))), width = 3),
       mainPanel(
         uiOutput("ms1ftWarn"), uiOutput("PMproteinWarn"), hr(), 
-        plotlyOutput("PMFM", width = "100%", height = "400px") %>% 
+        jqui_resizable(plotlyOutput("PMFM", width = "100%", height = "400px")) %>% 
         withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")),
         DTOutput("ms1ftTab", width = "100%", height = "200px")))),
     
@@ -636,6 +649,7 @@ server <- function(input, output, session) {
   
   # Initialize MS1FT file path
   ms1ftPath <- reactiveVal(NULL)
+  targetsPath <- reactiveVal(NULL)
   
   # Load description data 
   Desc <- data.frame(xlsx::read.xlsx(file.path("Server", "Pop_Up_Functions", "Function_Descriptions.xlsx"), 1))
