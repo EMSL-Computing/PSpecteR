@@ -34,6 +34,14 @@ list(
     
   }),
   
+  GET_glossary <- reactive({
+    
+    data.table::fread(
+      system.file("extdata", "Unimod_v20220602.csv", package = "pspecterlib")
+    )
+    
+  }),
+  
   # Get matched peaks 
   GET_matched_peaks <- reactive({
     

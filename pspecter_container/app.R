@@ -9,7 +9,6 @@ library(shiny)
 library(shinycssloaders) 
 library(shinyWidgets)
 library(shinyBS)
-library(shinyFiles)
 library(shinyjs)
 library(shinyjqui)
 
@@ -88,15 +87,18 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
     # Upload an MS File: Shiny files button or type path
     bsCollapse(multiple = T, bsCollapsePanel(
       title = HTML('<p><strong>Mass Spectra (MS) FILE (Required)</strong></p>'),
-      shinyFilesButton("mzmsFile", HTML("<strong>Search Folders:</strong> mzML, mzXML, raw"), 
-                       "Choose MS File: mzML, mzXML, or raw", F),
       
       if (!LightVersion) {
         tagList(
           hr(), 
           textInput("mzmsHandle", "...or type in the MS file path", "", placeholder = "Type full MS file path with forward slashes"),
-          list(actionButton("mzmsHandleGo", "Use MS Path"), actionButton("mzmsHandleClear", "Clear MS Path"))
+          list(actionButton("mzmsHandleGo", "Use MS Path"), actionButton("mzmsHandleClear", "Clear MS Path")),
+          shinyFilesButton("mzmsFile", HTML("<strong>Search Folders:</strong> mzML, mzXML, raw"), 
+                           "Choose MS File: mzML, mzXML, or raw", F)
          )
+      } else {
+        NULL
+
       },
     
       NULL)), width = 3),
@@ -565,16 +567,13 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
     # Make the unicode glossary
     tabPanel("Unimod Glossary", sidebarLayout(sidebarPanel(
       HTML('<p style="text-align: center;"><span style="font-size: 16pt;"><strong>
-           C. UNIMOD GLOSSARY</strong></span></p>'), 
-      bsCollapse(multiple = T, bsCollapsePanel("1. Select Columns",
-        pickerInput("glCheckboxes", "Select Table Columns", options = list(`live-search` = TRUE),
-        c("Accession Number" = "1", "PSI-MS Name" = "2", "Interim Name" = "3", 
-          "Description" = "4", "Monoisotopic Mass" = "5", "Average Mass" = "6", 
-          "Composition" = "7", "Molecular.Formula" = "8", "Modified.Sites" = "9"), multiple = TRUE, 
-        selected = c("1","3","5","8","9"))),
-      bsCollapsePanel("2. Append Table", actionButton("glAdd", "Add Modification"), HTML("<br></br>"),
+           UNIMOD GLOSSARY</strong></span></p>'), 
+      bsCollapse(multiple = T, 
+      bsCollapsePanel("Append Table", actionButton("glAdd", "Add Modification"), HTML("<br></br>"),
         shinyFilesButton("glCSVadd", "Add Glossary File", "Choose Glossary File: CSV", F)),
-      bsCollapsePanel("3. Export Data", downloadButton("glEXP", "Export Glossary"))), width = 3),
+      bsCollapsePanel("Export Data", 
+                      downloadButton("glEXP", "Export Glossary"),
+                      downloadButton("glnewEXP", "Export Added Modifications"))), width = 3),
       mainPanel(DTOutput("GlossTab", width = "100%", height = "500px"))))),
    
    ########################################
@@ -681,14 +680,11 @@ server <- function(input, output, session) {
   ## 3. VISUALIZE PTM FUNCTIONS ##
   ################################
   
-  # Get modification 
-  source(file.path("Server", "Get", "Get_Mod.R"), local = T)$value
-  
   # Get server information for spectra information
-  source(file.path("Server", "3_VisualizePTM", "VisPTM.R"), local = T)$value
+  #source(file.path("Server", "3_VisualizePTM", "VisPTM.R"), local = T)$value
   
   # Get server information for error map, sequence with flags, and precursor
-  source(file.path("Server", "3_VisualizePTM", "OtherPlots.R"), local = T)$value
+  #source(file.path("Server", "3_VisualizePTM", "OtherPlots.R"), local = T)$value
   
   ###################################
   ## 4. PROTEIN COVERAGE FUNCTIONS ##

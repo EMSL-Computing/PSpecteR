@@ -29,7 +29,13 @@ list(
   # Export GLOSSARY CSV
   output$glEXP <- downloadHandler(
     filename = function() {"Modifications_Glossary.csv"},
-    content = function(file) {fwrite(getGlossary(), file)}
+    content = function(file) {fwrite(GET_glossary(), file)}
+  ),
+  
+  # Export ADDITIONAL MODFICATINONS CSV
+  output$glnewEXP <- downloadHandler(
+    filename = function() {"Added_Modifications.csv"},
+    content = function(file) {fwrite(gloss$AddedMods, file)}
   ),
   
   # Export PEAK CSV
