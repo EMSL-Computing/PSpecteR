@@ -27,20 +27,28 @@ list(
   
   # When the choose button is clicked, here is the volume it will open up to and what information will be given to msPath
   observeEvent(input$mzmsFile, {
-    tryPath <- parseFilePaths(uploadFolder, input$mzmsFile)[1,]$datapath
     
-    # Remove specific directory path information when macOS or Linux
-    if (Sys.info()["sysname"] %in% c("Darwin", "Linux")) {
-      tryPath <- gsub("/Volumes/Macintosh HD", "", tryPath)}
-    if (is.na(tryPath)) {msPath(NULL)} else {
-      msPath(tryPath)
+    if (!LightVersion) {
       
-      # Add ID and FASTA file if they exist
-      testID <- gsub(".mzML|.mzXML|.raw|.mzml|.mzxml", ".mzid", tryPath) 
-      if (file.exists(testID)) {idPath(testID)}
-      testFASTA <- gsub(".mzML|.mzXML|.raw|.mzml|.mzxml", ".fasta", tryPath)
-      if (file.exists(testFASTA)) {fastaPath(testFASTA)}
+      tryPath <- parseFilePaths(uploadFolder, input$mzmsFile)[1,]$datapath
+      
+      # Remove specific directory path information when macOS or Linux
+      if (Sys.info()["sysname"] %in% c("Darwin", "Linux")) {
+        tryPath <- gsub("/Volumes/Macintosh HD", "", tryPath)}
+      if (is.na(tryPath)) {msPath(NULL)} else {
+        msPath(tryPath)
+        
+        # Add ID and FASTA file if they exist
+        testID <- gsub(".mzML|.mzXML|.raw|.mzml|.mzxml", ".mzid", tryPath) 
+        if (file.exists(testID)) {idPath(testID)}
+        testFASTA <- gsub(".mzML|.mzXML|.raw|.mzml|.mzxml", ".fasta", tryPath)
+        if (file.exists(testFASTA)) {fastaPath(testFASTA)}
+      }
+      
+    } else {
+      msPath(input$mzmsFile$datapath)
     }
+    
   }),
   
   # Let the user know which file will be used in the app and whether the manally inputted file is an acceptable path or not
@@ -61,7 +69,9 @@ list(
         paste("No MS file uploaded")
       }
     
-    } else {paste(msPath())}
+    } else {
+      if (!LightVersion | input$testBU | input$testTD) {paste(msPath())} else {input$mzmsFile$name}
+    }
   
   }),
   
@@ -109,10 +119,16 @@ list(
   
   # When choose button is clicked, determine what information is passed to idPath
   observeEvent(input$idFile, {
-    tryPath <- parseFilePaths(uploadFolder, input$idFile)[1,]$datapath
-    if (is.na(tryPath)) {idPath(NULL)} else {
-      idPath(tryPath)
+    
+    if (!LightVersion) {
+      tryPath <- parseFilePaths(uploadFolder, input$idFile)[1,]$datapath
+      if (is.na(tryPath)) {idPath(NULL)} else {
+        idPath(tryPath)
+      }
+    } else {
+      idPath(input$idFile$datapath)
     }
+    
   }),
   
   # Let the user know which file will be used in the app whether the manually inputed file is an acceptable path or not
@@ -132,7 +148,9 @@ list(
       } else {
         paste("No ID file uploaded")
       }
-    } else {paste(idPath())}
+    } else {
+      if (!LightVersion | input$testBU | input$testTD) {paste(idPath())} else {input$idFile$name}
+    }
     
   }),
   
@@ -172,9 +190,14 @@ list(
   
   # When choose button is clicked, determine which information is passed to fastaPath
   observeEvent(input$fastaFile, {
-    tryPath <- parseFilePaths(uploadFolder,input$fastaFile)[1,]$datapath
-    if (is.na(tryPath)) {fastaPath(NULL)} else {
-       fastaPath(tryPath)
+    
+    if (!LightVersion) {
+      tryPath <- parseFilePaths(uploadFolder,input$fastaFile)[1,]$datapath
+      if (is.na(tryPath)) {fastaPath(NULL)} else {
+         fastaPath(tryPath)
+      }
+    } else {
+      fastaPath(input$fastaFile$datapath)
     }
   }),
   
@@ -196,7 +219,9 @@ list(
       paste("No FA file uploaded")
     }
     
-    } else {paste(fastaPath())}
+    } else {
+      if (!LightVersion | input$testBU | input$testTD) {paste(fastaPath())} else {input$fastaFile$name}
+    }
     
   }),
   

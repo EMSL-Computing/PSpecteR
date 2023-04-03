@@ -115,6 +115,27 @@ list(
     
   }),
   
+  # Add uploaded file 
+  observeEvent(input$glCSVadd, {
+    
+    # Read data 
+    new_data <- fread(input$glCSVadd$datapath)
+    
+    # Columns must all be in the glossary 
+    if (!all(colnames(new_data) %in% colnames(GET_glossary()))) {
+      sendSweetAlert(session, "Adding modifications to glossary error", 
+                     paste0("The following columns are not permitted: ", 
+                            paste(colnames(new_data)[colnames(new_data) %in% colnames(GET_glossary()) == FALSE], collapse = ", ")
+                            ),
+                     "error")
+      return(NULL)
+    }
+    
+    # Otherwise, bind to our list
+    gloss$AddedMods <- dplyr::bind_rows(gloss$AddedMods, new_data)
+    
+  }),
+  
   ##########################
   ## RENDER TABLE / PLOTS ##
   ##########################

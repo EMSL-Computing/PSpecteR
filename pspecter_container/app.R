@@ -97,8 +97,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
                            "Choose MS File: mzML, mzXML, or raw", F)
          )
       } else {
-        NULL
-
+        fileInput("mzmsFile", "Upload MS Data: mzml, mzxml, or raw", accept = c(".mzml", ".mzML", ".mzxml", ".mzXML", ".raw"))
       },
     
       NULL)), width = 3),
@@ -111,18 +110,18 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
   sidebarLayout(sidebarPanel(
     
     bsCollapse(bsCollapsePanel(title = HTML('<p><strong>Peptide Identification (ID) FILE (Optional)</strong></p>'),
-      shinyFilesButton("idFile", HTML("<strong>Search Folders:</strong> mzid, mzID"), 
-                       "Choose ID File: mzid", F), 
       
       if (!LightVersion) {
         tagList(
           hr(),
           textInput("idHandle", "...or type in the ID file path", "", placeholder = "Type full ID file path with forward slashes"),
-          list(actionButton("idHandleGo", "Use ID Path"), actionButton("idHandleClear", "Clear ID Path"))
+          list(actionButton("idHandleGo", "Use ID Path"), actionButton("idHandleClear", "Clear ID Path")),
+          shinyFilesButton("idFile", HTML("<strong>Search Folders:</strong> mzid, mzID"), 
+                           "Choose ID File: mzid", F)
         )
+      } else {
+        fileInput("idFile", "Upload ID Data: mzid", accept = c(".mzid"))
       },
-        
-        
       NULL)), width = 3),
     
       # Like before, a succesful upload will include output which informs the user.
@@ -131,15 +130,17 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
   # The third side panel allows for a user to upload an optional fasta file.
   sidebarLayout(sidebarPanel(
     bsCollapse(bsCollapsePanel(title = HTML('<p><strong>FASTA Protein Database (FA) FILE (Optional)</strong></p>'),
-    shinyFilesButton("fastaFile", HTML("<strong>Search Folders:</strong> FASTA, FA"), 
-                     "Choose FA File: FASTA (FA)", F), 
     
     if (!LightVersion) {
       tagList(
         hr(), 
         textInput("fastaHandle", "...or type in the FA file path", "", placeholder = "Type full FA file path with forward slashes"),
-        list(actionButton("fastaHandleGo", "Use FA Path"), actionButton("fastaHandleClear", "Clear FA Path"))
+        list(actionButton("fastaHandleGo", "Use FA Path"), actionButton("fastaHandleClear", "Clear FA Path")),
+        shinyFilesButton("fastaFile", HTML("<strong>Search Folders:</strong> FASTA, FA"), 
+                         "Choose FA File: FASTA (FA)", F)
       )
+    } else {
+      fileInput("fastaFile", "Upload FASTA Data: fa, fasta", accept = c(".fa", ".fasta", ".FA", ".FASTA"))
     },
     
     NULL)), width = 3),
@@ -534,14 +535,14 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
          plotlyOutput("SMplot", width = "100%", height = "500px") %>% 
            withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))))),
     
-    ##########################################
-    ## B. PROMEX FEATURE MAP USER INTERFACE ##
-    ##########################################
+    #######################################
+    ## PROMEX FEATURE MAP USER INTERFACE ##
+    #######################################
     
     # Generate the ProMex Feature Map
     tabPanel("ProMex Feature Map", sidebarLayout(sidebarPanel(
       HTML('<p style="text-align: center;"><span style="font-size: 16pt;"><strong>
-            B. PROMEX FEATURE MAP</strong></span></p>'),
+            PROMEX FEATURE MAP</strong></span></p>'),
       bsCollapse(multiple = T, open = list("1. Upload MS1FT"),
          bsCollapsePanel("1. Upload MS1FT", 
            shinyFilesButton("ms1ftFile", HTML("<strong>Search Folders:</strong> ms1ft"), 
@@ -560,9 +561,9 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
         withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")),
         DTOutput("ms1ftTab", width = "100%", height = "200px")))),
     
-    #######################################
-    ## C. UNIMOD GLOSSARY USER INTERFACE ##
-    #######################################
+    ####################################
+    ## UNIMOD GLOSSARY USER INTERFACE ##
+    ####################################
     
     # Make the unicode glossary
     tabPanel("Unimod Glossary", sidebarLayout(sidebarPanel(
@@ -570,7 +571,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
            UNIMOD GLOSSARY</strong></span></p>'), 
       bsCollapse(multiple = T, 
       bsCollapsePanel("Append Table", actionButton("glAdd", "Add Modification"), HTML("<br></br>"),
-        shinyFilesButton("glCSVadd", "Add Glossary File", "Choose Glossary File: CSV", F)),
+        fileInput("glCSVadd", "Add Glossary File: csv", accept = c(".csv", "csv"))),
       bsCollapsePanel("Export Data", 
                       downloadButton("glEXP", "Export Glossary"),
                       downloadButton("glnewEXP", "Export Added Modifications"))), width = 3),
