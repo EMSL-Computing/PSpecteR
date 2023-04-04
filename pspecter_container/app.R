@@ -526,13 +526,13 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
      sidebarLayout(sidebarPanel(
        HTML('<p style="text-align: center;"><span style="font-size: 16pt;"><strong>
              SPECTRA METADATA PLOT</strong></span></p>'),
-       bsCollapse(open = list("1. Subset Data", "2. Select Variables"),
-        multiple = T, bsCollapsePanel("1. Subset Data", uiOutput(
+       bsCollapse(open = list("Subset Data", "Select Variables"),
+        multiple = T, bsCollapsePanel("Subset Data", uiOutput(
           "SMscannumUI"),  uiOutput("SMmslevelUI")),
-        bsCollapsePanel("2. Select Variables", uiOutput("xSMui"), uiOutput("ySMui"), uiOutput("labSMui")),
-        bsCollapsePanel("3. Take Image Snapshot", actionButton("imgSM", "Spectra Metadata Plot"))), width = 3), 
+        bsCollapsePanel("Select Variables", uiOutput("xSMui"), uiOutput("ySMui"), uiOutput("labSMui")),
+        bsCollapsePanel("Take Image Snapshot", actionButton("imgSM", "Spectra Metadata Plot"))), width = 3), 
        mainPanel(
-         plotlyOutput("SMplot", width = "100%", height = "500px") %>% 
+         jqui_resizable(plotlyOutput("SMplot", width = "100%", height = "500px")) %>% 
            withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))))),
     
     #######################################
