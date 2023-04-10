@@ -25,11 +25,6 @@ list(
     if (AM == "CID") {Ions <- c("a", "b", "y")} else
     if (AM == "ETD") {Ions <- c("b", "c", "y", "z")} 
     
-    # Include added ions if they exist
-    if (is.null(revals$AddedIons) == F) {
-      Ions <- c(Ions, paste0(revals$AddedIons$Ion, revals$AddedIons$Annotation))
-    }
-    
     return(Ions)
     
   }),
@@ -53,15 +48,37 @@ list(
     if (is.null(input$ionGroups)) {return(NULL)}
     if (is.null(input$ssCorrScoreFilter)) {return(NULL)}
     
+    
+    # Add ions 
+    RegIons <- c("a", "b", "c", "x", "y", "z")[which(c("a", "b", "c", "x", "y", "z") %in% input$ionGroups)]
+    ModIons <- input$ionGroups[which(input$ionGroups %in% c("a", "b", "c", "x", "y", "z") == FALSE)]
+    if (length(ModIons) == 0) {ModIons <- NULL}
+    
+    # Filter to selected modified ions
+    if (!is.null(ModIons)) {
+      
+      NewIons <- make_mass_modified_ion(
+        Ion = revals$AddedIons$Ion,
+        Symbol = revals$AddedIons$Annotation,
+        AMU_Change = revals$AddedIons$`AMU Change`
+      )
+      class(NewIons) <- c("data.table", "data.frame")
+      NewIons <- NewIons %>% dplyr::filter(Modified_Ion %in% ModIons)
+      ModIons <- NewIons
+      class(ModIons) <- c(class(ModIons), "modified_ion")
+      
+    }
+    
     get_matched_peaks(
       ScanMetadata = GET_scan_metadata(),
       PeakData = GET_peak_data(),
       PPMThreshold = input$ssTolerance,
-      IonGroups = input$ionGroups,
+      IonGroups = RegIons,
       CalculateIsotopes = ifelse(is.null(input$ssISOspectra), TRUE, input$ssISOspectra),
       MinimumAbundance = 0.1,
       CorrelationScore = input$ssCorrScoreFilter,
       MatchingAlgorithm = "closest peak", 
+      AlternativeIonGroups = ModIons,
       AlternativeSequence = GET_sequence()
     )
     

@@ -53,21 +53,6 @@ list(
     
   }),
   
-  # Restore sequence for 2. Scan & Seq when this button is clicked
-  observeEvent(input$ssRSeq, {
-    
-    # Re-initiate sequence
-    seq <- ""
-    
-    # Change sequence to actual seq if it exists
-    scan <- getScan()
-    if (is.null(scan) == F) {seq <- scan[getScanClick(), "Sequence"]}
-    
-    # Update text input
-    updateTextInput(session, "ssNewSeq", value = seq)
-    
-  }), 
-  
   # Change X (M/Z) Spectra Values
   observeEvent(input$ssSpecNewRange, {
     updateSliderInput(session, "ssSpecX", value = c(input$ssSpecMin, 
@@ -89,7 +74,7 @@ list(
     showModal(modalDialog(fluidPage(
       column(4, selectInput("AddIonSelect", "Select Ion to Modify", c("a", "b", "c", "x", "y", "z"), "z")),
       column(4, selectInput("AddIonAnnotation", "Choose Annotation Symbol", 
-        c("'", "''", "*", "**", "(-1)", "(+1)", "(-2)", "(+2)"), "'")),
+        c("+", "++", "-", "--", "^", "^^"))),
       column(4, numericInput("AddIonWeight", "Add Weight Change in AMU", 1.007825)),
       column(12, hr()),
       column(12, DT::dataTableOutput("AddIonTable"))),
@@ -108,6 +93,62 @@ list(
         withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
     title = HTML('<p style="text-align: center;">View Spectra Full Screen</p>'),
     footer = modalButton("Exit"), size = "l", easyClose = T))
+  }),
+  
+  # Try new sequence
+  observeEvent(input$ssASeq, {
+    
+    Nseq <- input$ssNewSeq
+    if (is.null(Nseq) || is.na(Nseq) || Nseq == "") {revals$testSeq <- NULL} else 
+      
+      # Test that the square brackets are added
+      if (grepl("\\[", Nseq) & !grepl("\\]", Nseq) |
+          !grepl("\\[", Nseq) & grepl("\\]", Nseq)) {revals$testSeq <- NULL} else
+            
+      # No spaces 
+      if (grepl("[[:space:]]", Nseq)) {revals$testSeq <- NULL} else
+              
+      # Extract modifications 
+      if (grepl("\\[", Nseq)) {
+        Split <- Nseq %>% strsplit("\\[|\\]") %>% unlist()
+        Modifications <- Split[c(FALSE, TRUE)]
+        
+        # Iterate through modifications
+        lapply(Modifications, function(mod) {
+          
+          # Test if numeric 
+          if (is.na(as.numeric(mod))) {
+            if (!(mod %in% GET_glossary()$Modification)) {revals$testSeq <- NULL}
+          }
+          
+        }) %>% unlist() %>% paste(collapse = " ")
+        
+      }
+    
+    # Test amino acids   
+    if (nchar(Nseq) < 2) {revals$testSeq <- NULL} else
+    if (grepl("[BbJjOoUuXxZz]", Nseq)) {revals$testSeq <- NULL} else
+    {revals$testSeq <- Nseq}
+    
+  }),
+  
+  # Reset sequence
+  observeEvent(input$ssRSeq, {
+    
+    # Re-initiate sequence
+    seq <- ""
+    
+    # Change sequence to actual seq if it exists
+    scan <- GET_scan_metadata() %>% as.data.frame()
+    if (is.null(scan) == F) {seq <- scan[GET_scan_click(), "Sequence"] %>% unlist()}
+    
+    # Remove revals 
+    revals$testSeq <- NULL
+    
+    # Update text input
+    updateTextInput(session, "ssNewSeq", value = seq)
+    
+    
   }),
   
   ####################
@@ -212,8 +253,6 @@ list(
              selection = list(mode = 'single', selected = 1), rownames = F, filter = 'top', 
              options = list(pageLength = 5, scrollX = T))
   }), 
-  
-  observeEvent(input$debug, {browser()}),
   
   # This will generate the spectrum view
   output$ssSpectrum <- renderPlotly({
@@ -361,15 +400,43 @@ list(
   
   # Output New Seq Warnings
   output$ssNSWarn <- renderText({
+    
     Nseq <- input$ssNewSeq
-    if (is.null(Nseq)) {paste("No empty strings or whitespace")} else
-    if (grepl("\\[", Nseq) | grepl("\\]", Nseq)) {paste("Brackets not supported.", 
-        "Use Vis PTM to test modifications.")} else
-    if (grepl("[[:space:]]", Nseq)) {paste("No empty strings or whitespace")} else
-    if (grepl("[^aA-zZ]", Nseq)) {paste("Letters only")} else
-    if (nchar(Nseq) < 2) {paste("Sequence must have > 1 amino acid")} else
-    if (grepl("[BbJjOoUuXxZz]", Nseq)) {paste("B, J, O, U, X, Z are incorrect options")} else
-      {paste("Acceptable sequence")}
+    if (is.null(Nseq) || is.na(Nseq) || Nseq == "") {return("No empty strings or whitespace")} else 
+    
+    # Test that the square brackets are added
+    if (grepl("\\[", Nseq) & !grepl("\\]", Nseq) |
+        !grepl("\\[", Nseq) & grepl("\\]", Nseq)) {return("Complete the brackets to test a modification")} else
+          
+    # No spaces 
+    if (grepl("[[:space:]]", Nseq)) {return("No empty strings or whitespace")} else
+      
+    # Extract modifications 
+    if (grepl("\\[", Nseq)) {
+      Split <- Nseq %>% strsplit("\\[|\\]") %>% unlist()
+      Modifications <- Split[c(FALSE, TRUE)]
+      
+      # Iterate through modifications
+      Responses <- lapply(Modifications, function(mod) {
+        
+        # Test if numeric 
+        if (is.na(as.numeric(mod))) {
+          if (!(mod %in% GET_glossary()$Modification)) {paste0(mod, " is not in the modifications glossary")}
+        }
+        
+      }) %>% unlist() %>% paste(collapse = " ")
+      
+      # Combine the sequence
+      Nseq <- Split[c(TRUE, FALSE)] %>% paste0(collapse = "")
+      
+      if (Responses != "") {return(Responses)}
+    }
+      
+    # Test amino acids   
+    if (nchar(Nseq) < 2) {return("Sequence must have > 1 amino acid")} else
+    if (grepl("[BbJjOoUuXxZz]", Nseq)) {return("B, J, O, U, X, Z are incorrect options for amino acids")} else
+    {return("Acceptable sequence")}
+    
   }), 
   
   

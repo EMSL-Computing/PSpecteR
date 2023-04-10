@@ -204,8 +204,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        
        # Add an action button for adding modifications or restoring the sequence
        list(actionButton("ssASeq", "Apply Seq"),
-            actionButton("ssRSeq", "Restore Seq"),
-            actionButton("debug", "debug"))
+            actionButton("ssRSeq", "Restore Seq"))
        
      ),
      
