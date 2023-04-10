@@ -11,6 +11,7 @@ library(shinyWidgets)
 library(shinyBS)
 library(shinyjs)
 library(shinyjqui)
+library(shinyFiles)
 
 # Load the pspecterlib package
 library(pspecterlib)
@@ -616,7 +617,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
 server <- function(input, output, session) {
   
   # This increases the alotted upload file to 10GB and supresses all warnings
-  options(shiny.maxRequestSize = 10000*1024^2, warn = -1) 
+  options(shiny.maxRequestSize = 3000*1024^2, warn = -1) 
   
   # Keep track of app start
   appStart <- reactiveValues(start = TRUE)

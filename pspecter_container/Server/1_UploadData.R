@@ -12,7 +12,7 @@ list(
   # Include a check mark and an xmark for valud and invalid file paths
   checkmark <- img(src = "checkmark.png"),
   xmark <- img(src = "xmark.png"),  
-  uploadFolder <- getVolumes(),
+  if (!LightVersion) {uploadFolder <- getVolumes()},
   
   ###############
   ## MS UPLOAD ##
@@ -21,9 +21,13 @@ list(
   # Set a reactive value for the mass spec file path (msPath)
   msPath <- reactiveVal(NULL),
   
-  # Specify the shiny file choose box
-  shinyFileChoose(input, 'mzmsFile', roots = uploadFolder, defaultPath = "/data/data",
-                  filetypes = c("mzML", "mzml", "mzxml", "mzXML", "raw")),
+  if (!LightVersion) {
+  
+    # Specify the shiny file choose box
+    shinyFileChoose(input, 'mzmsFile', roots = uploadFolder, defaultPath = "/data/data",
+                    filetypes = c("mzML", "mzml", "mzxml", "mzXML", "raw"))
+    
+  },
   
   # When the choose button is clicked, here is the volume it will open up to and what information will be given to msPath
   observeEvent(input$mzmsFile, {
@@ -70,7 +74,11 @@ list(
       }
     
     } else {
-      if (!LightVersion | input$testBU | input$testTD) {paste(msPath())} else {input$mzmsFile$name}
+      if (!is.null(input$testBU) & !is.null(input$testTD)) {
+        if (!LightVersion | input$testBU | input$testTD) {paste(msPath())} else {input$mzmsFile$name}
+      } else {
+        if (!LightVersion) {paste(msPath())} else {input$mzmsFile$name}
+      }
     }
   
   }),
@@ -78,6 +86,7 @@ list(
   # If button is clicked and the path is valid, then lock in this variable's path
   observeEvent(input$mzmsHandleGo, {
     
+
     # Set the message to a warning
     alert <- sendSweetAlert(session, "MS File Path Error", "Input file must exist 
              and be a .mzML, .mzXML, or .raw file.", "error") 
@@ -114,8 +123,12 @@ list(
   idPath <- reactiveVal(value = NULL),
   
   # Specify the shiny file choose box
-  shinyFileChoose(input, 'idFile', roots = uploadFolder, defaultPath = "/data/data",
-                  filetypes = c("mzid", "mzID")),
+  if (!LightVersion) {
+    
+    shinyFileChoose(input, 'idFile', roots = uploadFolder, defaultPath = "/data/data",
+                    filetypes = c("mzid", "mzID"))
+    
+  },
   
   # When choose button is clicked, determine what information is passed to idPath
   observeEvent(input$idFile, {
@@ -149,7 +162,11 @@ list(
         paste("No ID file uploaded")
       }
     } else {
-      if (!LightVersion | input$testBU | input$testTD) {paste(idPath())} else {input$idFile$name}
+      if (!is.null(input$testBU) & !is.null(input$testTD)) {
+        if (!LightVersion | input$testBU | input$testTD) {paste(idPath())} else {input$idFile$name}
+      } else {
+        if (!LightVersion) {paste(idPath())} else {input$idFile$name}
+      }
     }
     
   }),
@@ -184,9 +201,13 @@ list(
   # Set a reactive value for the fasta file path (fastaPath)
   fastaPath <- reactiveVal(value = NULL),
   
-  # Specify the shiny file choose box
-  shinyFileChoose(input, 'fastaFile', roots = uploadFolder, defaultPath = "/data/data", 
-                  filetypes = c("fa", "FA", "fasta", "FASTA")),
+  if (!LightVersion) {
+    
+    # Specify the shiny file choose box
+    shinyFileChoose(input, 'fastaFile', roots = uploadFolder, defaultPath = "/data/data", 
+                    filetypes = c("fa", "FA", "fasta", "FASTA")) 
+    
+  },
   
   # When choose button is clicked, determine which information is passed to fastaPath
   observeEvent(input$fastaFile, {
@@ -220,7 +241,11 @@ list(
     }
     
     } else {
-      if (!LightVersion | input$testBU | input$testTD) {paste(fastaPath())} else {input$fastaFile$name}
+      if (!is.null(input$testBU) & !is.null(input$testTD)) {
+        if (!LightVersion | input$testBU | input$testTD) {paste(fastaPath())} else {input$fastaFile$name}
+      } else {
+        if (!LightVersion) {paste(fastaPath())} else {input$fastaFile$name}
+      }
     }
     
   }),
