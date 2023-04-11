@@ -13,7 +13,7 @@ library(shinyjs)
 library(shinyjqui)
 library(shinyFiles)
 
-# Load the pspecterlib package
+# Load the pspecterlib package 
 library(pspecterlib)
 
 # Load packages for interactive data visualization
@@ -34,6 +34,7 @@ imgRender <- function(id, path, width, height) {
 }
 
 # Determine the version of the tool
+Sys.setenv("PSpecteRLight" = 1)
 LightVersion <- Sys.getenv("PSpecteRLight") == "1"
 
 # Suppress all warnings
@@ -232,13 +233,19 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        
       ),
        
-      bsCollapsePanel("Other Figures",
-       
-         # Set slider for adding annotations for PTMs
-         uiOutput("ssAnoPTMSWITCH"),
+      bsCollapsePanel("Sequence Plot Settings",
          
          # Set slider for adding charges to sequence plots
-         uiOutput("seqChargeSWITCH")
+         uiOutput("seqChargeSWITCH"),
+         
+         # Change the sequence plot wrapper size 
+         numericInput("seqWrap", "Set Wrap Size", 10, 1, 20, 1),
+         
+         # Set slider for adding annotations for PTMs on sequence plots 
+         hr(), uiOutput("ssAnoPTMSWITCH"),
+         
+         # Change the PTM annotation size
+         numericInput("seqPTMsize", "Set PTM Annotation Size", 5, 1, 20, 1)
          
       )
       

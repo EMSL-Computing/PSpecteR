@@ -132,7 +132,7 @@ list(
     
   }),
   
-  # Reset sequence
+  # Reset sequence on button click
   observeEvent(input$ssRSeq, {
     
     # Re-initiate sequence
@@ -151,6 +151,26 @@ list(
     
   }),
   
+  # Reset sequence on new column click
+  observeEvent(GET_scan_click(), {
+    
+    # Re-initiate sequence
+    seq <- ""
+    
+    # Change sequence to actual seq if it exists
+    scan <- GET_scan_metadata() %>% as.data.frame()
+    if (is.null(scan) == F) {seq <- scan[GET_scan_click(), "Sequence"] %>% unlist()}
+    
+    # Remove revals 
+    revals$testSeq <- NULL
+    
+    # Update text input
+    updateTextInput(session, "ssNewSeq", value = seq)
+    
+    browser()
+    
+  }),
+  
   ####################
   ## RENDER WIDGETS ##
   ####################
@@ -166,7 +186,7 @@ list(
   
   # Render the Seq: Annotate PTMs Widget
   output$ssAnoPTMSWITCH <- renderUI({
-    SAP <- materialSwitch("ssAnoPTM", HTML("<strong>All Plots: Annotate Modifications</strong>"), value = T, status = "success")
+    SAP <- materialSwitch("ssAnoPTM", HTML("<strong>Annotate Modifications</strong>"), value = T, status = "success")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(SAP, Desc[Desc$Name == "ssAnoPTM", "Title"], Desc[Desc$Name == "ssAnoPTM", "Description"],
              options = list(selector = '.material-switch'), placement = 'right')
@@ -175,7 +195,7 @@ list(
   
   # Render the Seq: Charge 
   output$seqChargeSWITCH <- renderUI({
-    CS <- materialSwitch("seqCharge", HTML("<strong>Sequence: Add Charges</strong>"), value = F, status = "success")
+    CS <- materialSwitch("seqCharge", HTML("<strong>Add Charges</strong>"), value = F, status = "success")
     CS
   }),
   
@@ -359,7 +379,9 @@ list(
       MatchedPeaks = GET_matched_peaks(),
       IncludeIsotopes = ifelse(is.null(input$ssISOspectra), TRUE, input$ssISOspectra),
       RemoveChargeAnnotation = ifelse(is.null(input$seqCharge), TRUE, input$seqCharge == FALSE),
-      WrapLength = 15
+      RemoveModification = ifelse(is.null(input$ssAnoPTM), FALSE, input$ssAnoPTM == FALSE),
+      WrapLength = input$seqWrap,
+      LabelSize = input$seqPTMsize
     )
     
     plots$currFLAG <- p
