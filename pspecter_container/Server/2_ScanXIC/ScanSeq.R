@@ -229,7 +229,7 @@ list(
     scan <- GET_scan_metadata()
     if (is.null(scan) == F) {seq <- scan[GET_scan_click(), "Sequence"]}
     
-    SSseqUI <- textInput("ssNewSeq", "Test Different Sequence", value = seq, placeholder = "Enter Amino Acid Sequence")
+    SSseqUI <- textInput("ssNewSeq", "Test Different Sequence", value = seq, placeholder = "Enter Amino Acid Sequence in ProForma format")
     if (is.null(input$infoMode) == F && input$infoMode == T) {
       popify(SSseqUI, Desc[Desc$Name == "ssNewSeq", "Title"], Desc[Desc$Name == "ssNewSeq", "Description"])
     } else {SSseqUI}
@@ -402,20 +402,6 @@ list(
     # Render datatable
     datatable(CA, selection = list(mode = 'single'), rownames = F, filter = 'top', 
               options = list(pageLength = 3), escape = F)
-  }),
-  
-  # Output full screen spectra
-  output$bigSpec <- renderPlotly({
-    if (is.null(getSSPeak())) {return(NULL)}
-    if (nrow(getSSPeak()) > 50000) {
-      sendSweetAlert(session, "Full Screen Warning", 
-                     "Full screen disabled for spectra with more than 50,000 peaks.",
-                     type = "warning")
-      return(NULL)
-    } else {
-      p <- plots$currSPEC
-      plotly::toWebGL(p)
-    }
   }),
   
   # Output New Seq Warnings

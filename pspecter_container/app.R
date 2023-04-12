@@ -369,13 +369,15 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
             
     # Select the spectra
     sidebarLayout(sidebarPanel(
-      bsCollapse(multiple = T, open = list("PreSelected Parameters"),
+      bsCollapse(multiple = T, open = list("Preselected Parameters"),
        bsCollapsePanel("Preselected Parameters", uiOutput("VPsetparams")),
        bsCollapsePanel("Dynamic Modification Search", uiOutput("VPselect"), 
          selectInput("VPmaxmod", "Maximum Number of Modifications", choices = c("1", "2"), selected = "2"),
-         actionButton("VPposs", "Add to List of Proteoforms to Match")),
-       bsCollapsePanel("Manual Modification Search", 
-          actionButton("VPspecific", "Manual Search")
+         actionButton("VPposs", "Add to list of proteoforms to match")),
+       bsCollapsePanel("Single Modification Search", 
+                       uiOutput("VPspecificUI"),
+                       htmlOutput("VPWarn"), hr(),
+                       actionButton("VPspecificConfirm", "Add to list of proteoforms to match")
        ),
        bsCollapsePanel("Take Snapshot", 
          actionButton("imgVPSPEC", "Spectra"), 
@@ -386,12 +388,13 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        )), width = 3),
       
       mainPanel(
+        textOutput("VPGeneralMessage"),
         jqui_resizable(plotlyOutput("VPSpec", width = "100%", height = "350px")) %>% 
           withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")),
-        jqui_resizable(plotlyOutput("VPseqflags", width = "100%", height = "350px")) %>% 
+        jqui_resizable(plotOutput("VPseqflags", width = "100%", height = "350px")) %>% 
           withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")),
-        list(actionButton("VPreset", "Clear Proteoform Options", icon = icon("recycle")),
-             actionButton("VPgo", "Calculate Modifications", icon = icon("check"))),
+        list(actionButton("VPReset", "Clear Proteoform Options", icon = icon("recycle")),
+             actionButton("VPCalc", "Calculate Modifications", icon = icon("check"))),
         DT::dataTableOutput("VPmetrics", width = "100%", height = "250px")
       )
      )
