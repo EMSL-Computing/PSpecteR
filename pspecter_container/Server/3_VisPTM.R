@@ -270,6 +270,12 @@ list(
     revals$PTMs <- NULL
     revals$PTMList <- list()
   }),
+  
+  # Also reset when GET_sequence changes 
+  observeEvent(GET_sequence(), {
+    revals$PTMs <- NULL
+    revals$PTMList <- list()
+  }),
 
   # Dynamic search calculations
   observeEvent(input$VPCalc, {
@@ -441,7 +447,6 @@ list(
       LabelSize = 6,
       Interactive = TRUE
     )
-    
 
   }),
 
@@ -453,7 +458,8 @@ list(
     sequence_plot(
       MatchedPeaks = revals$PTMList[[GET_vis_click()]],
       RemoveChargeAnnotation = TRUE,
-      WrapLength = 10
+      WrapLength = 10,
+      LabelSize = 4
     )
     
   })

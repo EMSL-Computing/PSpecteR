@@ -385,9 +385,9 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
       
       mainPanel(
         textOutput("VPGeneralMessage"),
-        jqui_resizable(plotlyOutput("VPSpec", width = "100%", height = "350px")) %>% 
+        jqui_resizable(plotlyOutput("VPSpec", width = "100%", height = "400px")) %>% 
           withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")),
-        jqui_resizable(plotOutput("VPseqflags", width = "100%", height = "350px")) %>% 
+        jqui_resizable(plotOutput("VPseqflags", width = "100%", height = "400px")) %>% 
           withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")),
         list(actionButton("VPReset", "Clear Proteoform Options", icon = icon("recycle")),
              actionButton("VPCalc", "Calculate Modifications", icon = icon("check"))),
