@@ -220,6 +220,14 @@ list(
     return(Seq)
     
   }),
+  
+  # Get VisPTM table last click
+  GET_vis_click <- reactive({
+    
+    clicked <- input$VPmetrics_row_last_clicked
+    if (is.null(clicked)) {return(1)} else {return(clicked)}
+    
+  }),
 
   
   # Get XIC

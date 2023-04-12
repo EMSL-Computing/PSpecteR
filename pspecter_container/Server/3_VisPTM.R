@@ -435,14 +435,26 @@ list(
     
     if (length(revals$PTMList) == 0) {return(NULL)}
     
-    browser()
+    annotated_spectrum_plot(
+      PeakData = GET_peak_data(),
+      MatchedPeaks = revals$PTMList[[GET_vis_click()]],
+      LabelSize = 6,
+      Interactive = TRUE
+    )
+    
 
   }),
 
   # Plot spectra with modifications
   output$VPseqflags <- renderPlot({
     
-    return(NULL)
+    if (length(revals$PTMList) == 0) {return(NULL)}
+    
+    sequence_plot(
+      MatchedPeaks = revals$PTMList[[GET_vis_click()]],
+      RemoveChargeAnnotation = TRUE,
+      WrapLength = 10
+    )
     
   })
 

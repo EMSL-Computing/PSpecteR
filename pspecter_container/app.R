@@ -379,10 +379,6 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
                        htmlOutput("VPWarn"), hr(),
                        actionButton("VPspecificConfirm", "Add to list of proteoforms to match")
        ),
-       bsCollapsePanel("Take Snapshot", 
-         actionButton("imgVPSPEC", "Spectra"), 
-         actionButton("imgVPFLAG", "Sequence")
-       ),
        bsCollapsePanel("Export Data", 
          downloadButton("VPcsv", "Export Modifications Data")
        )), width = 3),
