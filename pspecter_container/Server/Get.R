@@ -31,9 +31,16 @@ list(
   
   GET_glossary <- reactive({
     
-    data.table::fread(
+    Glossary <- data.table::fread(
       system.file("extdata", "Unimod_v20220602.csv", package = "pspecterlib")
     )
+    
+    # Extend added modifications 
+    if (!(is.null(gloss$AddedMods))) {
+      Glossary <- dplyr::bind_rows(gloss$AddedMods, Glossary)
+    }
+    
+    return(Glossary)
     
   }),
   

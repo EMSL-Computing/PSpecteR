@@ -173,6 +173,90 @@ list(
   #  revals$PTMdf <- rbind(revals$PTMdf, VisPTM)
   #  
   }),
+
+# If calculate is clicked, then start calculating the modifications table
+observeEvent(input$VPposs, {
+  
+  # Scan and sequence required
+  if (is.null(GET_scan_metadata())) {
+    sendSweetAlert(title = "Dynamic Modification Search Error", text = "Please upload MS data", type = "error")
+    return(NULL)
+  }
+  if (is.null(GET_sequence())) {
+    sendSweetAlert(title = "Dynamic Modification Search Error", text = "Please enter a test sequence in Visualize MS & XIC", type = "error")
+    return(NULL)
+  }
+  
+  # Get required values
+  mods <- input$VPpick
+  
+  if (is.null(mods)) {
+    sendSweetAlert(session, "No Modifications Selected", 
+                   "Select some modifications", type = "error")
+    return(NULL)
+  }
+  
+  modPerSeq <- as.numeric(input$VPmaxmod)
+  seq <- GET_sequence()
+  Glossary <- GET_glossary()
+  
+  # Fix seq 
+  convert <- convert_proforma(seq)
+  if (!is.character(convert)) {
+    seq <- attributes(convert)$pspecter$cleaned_sequence
+  } else {seq <- convert}
+  
+  # If there is a sequence longer than 0 and modifications have been selected,
+  # then permute all possibilities
+  if (is.null(seq) == F & length(seq) > 0 & is.null(mods) == F & is.null(GET_scan_metadata()) == F) {
+    
+    SeqSplit <- seq %>% strsplit("") %>% unlist()
+    
+    # Get all the PTM names and select them from the glossary
+    PTMs <- lapply(strsplit(mods, ";"), function(el) {el[1]}) %>% unlist()
+    
+    # Pull test 
+    if (length(PTMs) == 1) {
+      
+      # Extract residues 
+      Residues <-  Glossary[Glossary$Modification == PTMs, "Residues"]
+      
+      # Extract residues to search 
+      ResidueSearch <- Residues %>% 
+        unlist() %>% 
+        strsplit(" ") %>% 
+        unlist() %>% 
+        .[. %in% c("C-term", "N-term") == FALSE]
+
+        # Pull all possible positions
+        MultipleModFormat <- paste0(PTMs, ",X(", paste0(which(SeqSplit %in% ResidueSearch), collapse = ","), ")[1]")
+        Proteoforms <- multiple_modifications(seq, MultipleModFormat)
+        
+        # Add 2's if possible
+        if (modPerSeq == 2) {
+          MultipleModFormat <- paste0(PTMs, ",X(", paste0(which(SeqSplit %in% ResidueSearch), collapse = ","), ")[2]")
+          Proteoforms2 <- multiple_modifications(seq, MultipleModFormat)
+          Proteoforms <- c(Proteoforms, Proteoforms2)
+        }
+        
+        # If no modifications is not already in revals$PTMs
+        if ("No Modifications" %in% revals$PTMs == FALSE) {
+          revals$PTMs <- c("No Modifications", Proteoforms)
+        } else {
+          revals$PTMs <- c(revals$PTMs, Proteoforms)
+        }
+      
+    } else {
+        
+      
+      browser()
+      
+    }
+
+  }
+  
+  
+  }),
   
   # Modal pop up box for specific annotations
   observeEvent(input$VPspecific, {
@@ -188,18 +272,12 @@ list(
     }
     
    # Send alert if no MS data exists
-   if (is.null(GET_scan())) {
+   if (is.null(GET_scan_metadata())) {
       sendSweetAlert(session, "No MS Data error!", "Please upload MS data", type = "error")
       return(NULL)
    }
 
-   scan <- GET_scan()
-   
-   # Send alert if MS scan is 1
-   if (scan[getScanClick(), "MS.Level"] == 1) {
-     sendSweetAlert(session, "No MS1 Scans for VisPTM", "Select an MS2 scan.", type = "error")
-     return(NULL)
-   }
+  scan <- GET_scan_metadata()
    
   # Open the select modifications pop up box
   showModal(modalDialog(fluidPage(
@@ -370,10 +448,6 @@ list(
      # Get the glossary and sort it by the monoisotopic mass
     Glossary <- GET_glossary()
     
-    browser()
-    
-    Glossary <- Glossary[order(Glossary$Monoisotopic.Mass),]
-    
     # Make PTM Tag and higlight the most common, removing those from PTM
     PTM <- paste(Glossary$Modification, "; ", Glossary$`Mass Change`, sep = "")
     MostCommon <- c("Carbamidomethyl; 57.021464", "Label:2H(3)+Oxidation; 19.013745",
@@ -385,8 +459,8 @@ list(
                 Others = PTM), selected = "Carbamidomethyl; 57.021464", multiple = T, 
                 options = list(`live-search` = T, `virtual-Scroll` = 10, 
                 `max-Options-Text` = HTML('<span style="font-size: 20pt;"><strong>
-                <span style="color: #ff0000;">No more than 15 modifications
-                </span></strong></span>'), `max-Options` = 15))
+                <span style="color: #ff0000;">No more than 2 modifications
+                </span></strong></span>'), `max-Options` = 2))
   }), 
   
   ## Select Modifications Modal: Allow user to select the data of interest
@@ -452,7 +526,7 @@ list(
       <li><strong>Ion Groups:</strong>", paste(ionGroups, collapse = ", "), "</li>
       <li><strong>Include Isotopes:</strong>", input$ssISOspectra, "</li>
       <p>These parameters can be adjusted in Visualize MS &amp; XIC.</p>"))
-  })
+  }),
 
 #
   ## Select Modifications Modal: Show sequence plot
@@ -516,29 +590,15 @@ list(
   #}),
   #
   ## Generate DT with all possibilities and statistics
-  #output$VPmetrics <- DT::renderDataTable({
-  #  
-  #  VisPTM <- getVPMetrics()
-  #  if (is.null(VisPTM)) {return(NULL)}
-  #  
-  #  # Check scan if MS1 level
-  #  scan <- getScan()
-  #  if (is.null(scan) | scan[getScanClick(), "Scan.Num"] == 1) {return(NULL)}
-  #  
-  #  # Get the C-term position number
-  #  Cpos <- paste(" ", nchar(getNewVSeq()) + 1, ":", sep = "")
-  #  
-  #  # Change VisPTM 0 and nchar(seq) + 1 values to N- and C-term
-  #  VisPTM$Name <- unlist(lapply(VisPTM$Name, function(mod) {
-  #    mod <- paste("", mod)
-  #    mod <- gsub(" 0:", " N-term:", mod)
-  #    mod <- gsub(Cpos, " C-term", mod)
-  #    mod <- trimws(mod, which = "left")
-  #  }))
-  #  
-  #  datatable(VisPTM, rownames = F, filter = 'top', options = list(pageLength = 5),
-  #            selection = list(mode = 'single', selected = 1))
-  #}),
+  output$VPmetrics <- DT::renderDataTable({
+    
+    if (is.null(revals$PTMs)) {return(NULL)}
+      
+    PTM_DF <- data.frame(Row = 1:length(revals$PTMs), Modification = revals$PTMs)
+  
+    datatable(PTM_DF, rownames = F, filter = 'top', options = list(pageLength = 5),
+              selection = list(mode = 'single', selected = 1))
+  })
   #
   ## Plot spectra with modifications
   #output$VPSpec <- renderPlotly({

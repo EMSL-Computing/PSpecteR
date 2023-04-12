@@ -146,11 +146,6 @@ list(
     # Pull the glossary 
     Glossary <- GET_glossary()
     
-    # Extend added modifications 
-    if (!(is.null(gloss$AddedMods))) {
-      Glossary <- dplyr::bind_rows(gloss$AddedMods, Glossary)
-    }
-    
     datatable(Glossary, 
               rownames = F, filter = 'top', options = list(pageLength = 10),
               selection = list(mode = 'single'))
