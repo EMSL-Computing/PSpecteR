@@ -369,47 +369,35 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
             
     # Select the spectra
     sidebarLayout(sidebarPanel(
-      bsCollapse(multiple = T, open = list("1. Set Sequence"),
-       bsCollapsePanel("1. Set Sequence", htmlOutput("VPscanWarn"), hr(),
-         uiOutput("VPseq"), htmlOutput("VPnsWarn"), hr(), 
-         actionButton("VPrseq", "Restore Seq")
-       ),
-       bsCollapsePanel("2. Set Search Parameters", uiOutput("VPsetparams")),
-       bsCollapsePanel("3. Dynamic Modification Search", uiOutput("VPselect"), 
+      bsCollapse(multiple = T, open = list("PreSelected Parameters"),
+       bsCollapsePanel("PreSelected Parameters", uiOutput("VPsetparams")),
+       bsCollapsePanel("Dynamic Modification Search", uiOutput("VPselect"), 
          list(actionButton("VPclear", "Clear"), actionButton("VPcommon", "Autoselect Common Modifications")), hr(), 
-         selectInput("VPmaxmod", "Max Modifications per Pep", choices = c("1", "2", "3", "4", "5"), selected = "2"),
-         selectInput("VPmaxpep", "Max Modifications per Residue", choices = c("1", "2", "3"), selected = "1"),
+         selectInput("VPmaxmod", "Maximum Number of Modifications", choices = c("1", "2", "3", "4", "5"), selected = "2"),
          actionButton("VPposs", "Calculate")),
-       bsCollapsePanel("4. Manual Modification Search", actionButton("VPspecific", "Manual Search")),
-       bsCollapsePanel("5. Take Snapshot", 
+       bsCollapsePanel("Other Modification Search", 
+          HTML("Currently, we have two other options: "),
+          textInput("VPDynamicString", "1. Use a dynamic string like: Methyl,X(3^,5,7^)[2]"),  
+          actionButton("VPDynamicStringApply", "Apply Dynamic String"),
+          actionButton("VPspecific", "2. Manual Search")
+       ),
+       bsCollapsePanel("Take Snapshot", 
          actionButton("imgVPSPEC", "Spectra"), 
-         actionButton("imgVPHM", "Error Map"), HTML("<p></p>"), 
-         actionButton("imgVPFLAG", "Sequence"), 
-         actionButton("imgVPPRE", "Previous Precursor"), HTML("<p></p>"),
-         actionButton("imgVPNEXT", "Next Precursor")),
-       bsCollapsePanel("6. Export Data", 
-         downloadButton("VPcsv", "Export Modifications Data"),
-         hr() #downloadButton("VPmarkdown", "Export Markdown")
+         actionButton("imgVPFLAG", "Sequence")
+       ),
+       bsCollapsePanel("Export Data", 
+         downloadButton("VPcsv", "Export Modifications Data")
        )), width = 3),
       
       mainPanel(
-        column(12, 
-          tabsetPanel(id = "VisPTMtabs", tabPanel("Spectrum",
-            htmlOutput("VPMS1scanwarn"), 
-            plotlyOutput("VPSpec", width = "100%", height = "350px") %>% 
-              withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-          tabPanel("Error Map",
-            plotlyOutput("VPehm", width = "100%", height = "350px") %>% 
-              withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-          tabPanel("Sequence", 
-            plotlyOutput("VPseqflags", width = "100%", height = "350px") %>% 
-              withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-          tabPanel("Precursors",
-            column(6, plotlyOutput("VPmatchpre", width = "100%", height = "350px") %>% 
-              withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))), 
-            column(6, plotlyOutput("VPmatchnext", width = "100%", height = "350px") %>% 
-              withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")))))),
-        column(12, DT::dataTableOutput("VPmetrics", width = "100%", height = "250px"))))),
+        jqui_resizable(plotlyOutput("VPSpec", width = "100%", height = "350px")) %>% 
+          withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")),
+        jqui_resizable(plotlyOutput("VPseqflags", width = "100%", height = "350px")) %>% 
+          withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")),
+        DT::dataTableOutput("VPmetrics", width = "100%", height = "250px"))
+      )
+    
+    ),
    
    #####################################
    ## PROTEIN COVERAGE USER INTERFACE ##
@@ -421,7 +409,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
             
     # Set the tolerance      
     sidebarLayout(sidebarPanel(
-      bsCollapse(multiple = T, open = "1. Protein Coverage Settings",
+      bsCollapse(multiple = T, open = "Protein Coverage Settings",
        bsCollapsePanel("Protein Coverage Settings",
          selectInput("PTPlotScore", "Select a Score to Color the Coverage Plot by", c("Score", "QValue", "None"), "Score"),
          numericInput("PTToleranceQValue", "Q-Value Maximum", 1, min = 0, max = 1, step = 0.01),
@@ -703,10 +691,7 @@ server <- function(input, output, session) {
   ################################
   
   # Get server information for spectra information
-  #source(file.path("Server", "3_VisualizePTM", "VisPTM.R"), local = T)$value
-  
-  # Get server information for error map, sequence with flags, and precursor
-  #source(file.path("Server", "3_VisualizePTM", "OtherPlots.R"), local = T)$value
+  source(file.path("Server", "3_VisPTM.R"), local = T)$value
   
   ###################################
   ## 4. PROTEIN COVERAGE FUNCTIONS ##
