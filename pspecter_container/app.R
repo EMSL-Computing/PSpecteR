@@ -262,7 +262,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
              "Precursor Scan" = "6", "Activation Method" = "7", "Sequence" = "8", "Protein ID" = "9", 
              "Calculated Mass" = "10", "Experimental Mass" = "11", "Score" = "12", 
              "Q Value" = "13", "Decoy" = "14", "Description" = "15", "Protein Start Position" = "16",
-             "Modifications" = "17", "Order" = "18"), 
+             "Order" = "17"), 
            selected = as.character(c(1:7, 9:12, 16:18)), multiple = T), hr(),
        
         # Select columns for fragment table

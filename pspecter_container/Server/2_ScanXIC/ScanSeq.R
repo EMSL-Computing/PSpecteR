@@ -167,8 +167,6 @@ list(
     # Update text input
     updateTextInput(session, "ssNewSeq", value = seq)
     
-    browser()
-    
   }),
   
   ####################
