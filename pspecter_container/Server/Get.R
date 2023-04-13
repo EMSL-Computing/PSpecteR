@@ -86,7 +86,8 @@ list(
       CorrelationScore = input$ssCorrScoreFilter,
       MatchingAlgorithm = "closest peak", 
       AlternativeIonGroups = ModIons,
-      AlternativeSequence = GET_sequence()
+      AlternativeSequence = GET_sequence(),
+      AlternativeGlossary = GET_glossary()
     )
     
   }), 

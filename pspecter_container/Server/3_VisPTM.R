@@ -172,7 +172,7 @@ list(
     Glossary <- GET_glossary()
     
     # Fix seq 
-    convert <- convert_proforma(seq)
+    convert <- convert_proforma(seq, AlternativeGlossary = GET_glossary())
     if (!is.character(convert)) {
       seq <- attributes(convert)$pspecter$cleaned_sequence
     } else {seq <- convert}
@@ -192,13 +192,13 @@ list(
         # Pull all possible positions
         MultipleModFormat <- stitch_model_mods(SeqSplit, PTMs, 1)
         if (is.null(MultipleModFormat)) {return(NULL)}
-        Proteoforms <- multiple_modifications(seq, MultipleModFormat)
+        Proteoforms <- multiple_modifications(seq, MultipleModFormat, AlternativeGlossary = GET_glossary())
         
         # Add 2's if possible
         if (modPerSeq == 2) {
           MultipleModFormat <- stitch_model_mods(SeqSplit, PTMs, 2)
           if (is.null(MultipleModFormat)) {return(NULL)}
-          Proteoforms2 <- multiple_modifications(seq, MultipleModFormat)
+          Proteoforms2 <- multiple_modifications(seq, MultipleModFormat, AlternativeGlossary = GET_glossary())
           Proteoforms <- c(Proteoforms, Proteoforms2)
         }
         
@@ -216,7 +216,7 @@ list(
         
         if (is.null(checkList)) {return(NULL)}
    
-        Proteoforms <- do.call(c, lapply(checkList, function(x) {multiple_modifications(seq, x)})) %>% unique()
+        Proteoforms <- do.call(c, lapply(checkList, function(x) {multiple_modifications(seq, x, AlternativeGlossary = GET_glossary())})) %>% unique()
         
       
       }
@@ -255,7 +255,7 @@ list(
       return(NULL)
     }
     
-    if (is.character(convert_proforma(input$VPspecific))) {
+    if (is.character(convert_proforma(input$VPspecific, AlternativeGlossary = GET_glossary()))) {
       if ("No Modifications" %in% revals$PTMs == FALSE) {revals$PTMs <- "No Modifications"}
     } else {
       revals$PTMs <- c(revals$PTMs, input$VPspecific)
@@ -329,8 +329,8 @@ list(
         
         if (PTM == "No Modifications") {
           PTM <- GET_sequence()
-          if (!is.character(convert_proforma(PTM))) {
-            PTM <- attributes(convert_proforma(PTM))$pspecter$cleaned_sequence
+          if (!is.character(convert_proforma(PTM, AlternativeGlossary = GET_glossary()))) {
+            PTM <- attributes(convert_proforma(PTM, AlternativeGlossary = GET_glossary()))$pspecter$cleaned_sequence
           }
         }
         
@@ -344,7 +344,8 @@ list(
           CorrelationScore = input$ssCorrScoreFilter,
           MatchingAlgorithm = "closest peak", 
           AlternativeIonGroups = ModIons,
-          AlternativeSequence = PTM
+          AlternativeSequence = PTM,
+          AlternativeGlossary = GET_glossary()
        )
         
         
@@ -372,7 +373,7 @@ list(
     if (!is.null(GET_sequence())) {
       
       # Remove modificaitons if appropriate
-      convert <- GET_sequence() %>% convert_proforma()
+      convert <- GET_sequence() %>% convert_proforma(AlternativeGlossary = GET_glossary())
       
       if (!is.character(convert)) {
         Sequence <- attributes(convert)$pspecter$cleaned_sequence
