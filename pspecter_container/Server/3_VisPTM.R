@@ -245,7 +245,7 @@ list(
     }
     
     # Check sequence 
-    if (!is_sequence(input$VPspecific)) {
+    if (!is_sequence(input$VPspecific, AlternativeGlossary = GET_glossary())) {
       sendSweetAlert(session, "Apply Single Modification Error", "Unacceptable ProForma string", type = "error")
       return(NULL)
     }

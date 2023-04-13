@@ -195,8 +195,8 @@ getPTImgName <- reactive({
   if (is.null(GET_protein_ID()) == F) {
     clicked <- input$PTTable_row_last_clicked
     if (is.null(clicked)) {clicked <- 1}
-    PTID <- GET_protein_ID()
-    protein <- as.character(PTID[clicked, 1])}
+    protein <- GET_protein_ID()
+  }
   return(paste(plots$index, "_Protein_", protein, sep = ""))
 }),
 
@@ -418,15 +418,17 @@ observeEvent(input$PTscanreset, {
   updateSliderInput(session, "PTy", value = c(0, highest))
 }),
 
-# Add spectra if button is clicked
-observeEvent(input$PTAdd, {
-  plots$index <- plots$index + 1
-  plots$currMATCH <- plots$currMATCH %>% 
-    layout(xaxis = list(range = c(min(input$PTx), max(input$PTx))),
-           yaxis = list(range = c(min(input$PTy), max(input$PTy))))
-  name <- paste(getSSImgName(), "_Match", sep = "")
-  revals$imgData[[name]] <- plots$currMATCH
-  removeModal()
+# Export coverage plot
+observeEvent(input$imgMATCH, {
+  if (is.null(plots$currMATCH)) {
+    sendSweetAlert(session, title = "No Coverage Plot to Export", type = "error")
+  } else {
+    sendSweetAlert(session, title = "Coverage Plot Snapshot", 
+                   "Click 'Export Snapshot Images' in the right hand corner to see plots.", type = "success")
+    plots$index <- plots$index + 1
+    name <- paste(getPTImgName(), "_Coverage", sep = "")
+    revals$imgData[[name]] <- plots$currMATCH
+ } 
 }),
 
 # Add Protein Bar to exportable table

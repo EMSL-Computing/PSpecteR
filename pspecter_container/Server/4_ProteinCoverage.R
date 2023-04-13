@@ -86,7 +86,7 @@ list(
   }),
   
   # Reveal protein sequence
-  output$LSeq <- renderPlot({
+  output$LSeq <- renderPlotly({
     
     # Return null if no peptide coverage
     if (is.null(GET_peptide_coverage())) {return(NULL)}

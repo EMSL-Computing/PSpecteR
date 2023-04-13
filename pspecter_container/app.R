@@ -429,7 +429,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
           tabPanel("Bar", jqui_resizable(plotlyOutput("PTBar", width = "100%", height = "350px"))
                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))),
-          tabPanel("Literature Sequence", jqui_resizable(plotOutput("LSeq", width = "100%", height = "350px"))
+          tabPanel("Literature Sequence", jqui_resizable(plotlyOutput("LSeq", width = "100%", height = "350px"))
                    %>% withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")))),
         DT::dataTableOutput("PTTable", width = "100%", height = "250px")))),
    
