@@ -487,6 +487,7 @@ output$exIMAGE <- renderPlotly({
   if (is.null(exImages)) {return(NULL)} else {
     clicked <- input$exTABLE_row_last_clicked
     if (is.null(clicked)) {clicked <- 1}
+    
     p <- revals$imgData[[clicked]]
     
     # Convert to webGL for plots that are spectra

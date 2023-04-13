@@ -385,6 +385,7 @@ list(
     plots$currFLAG <- p
       
     p
+    
   }),
   
   # Render the get all fragment datatable
