@@ -641,7 +641,7 @@ server <- function(input, output, session) {
   targetsPath <- reactiveVal(NULL)
   
   # Load description data 
-  Desc <- data.frame(xlsx::read.xlsx(file.path("Server", "Pop_Up_Functions", "Function_Descriptions.xlsx"), 1))
+  Desc <- xlsx::read.xlsx(file.path("Server", "Pop_Up_Functions", "Function_Descriptions.xlsx"), 1) %>% na.omit() %>% data.frame()
   
   # Set environment variables
   #Environment <- read.csv("/SetEnvironment.csv", header = T)
