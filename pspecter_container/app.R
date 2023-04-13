@@ -628,9 +628,7 @@ server <- function(input, output, session) {
   # Keep track of the current version of each plot and names
   plots <- reactiveValues(currSPEC = NULL, currHM = NULL, currXIC = NULL,
              currSSBAR = NULL, currFLAG = NULL, currMPPRE = NULL, 
-             currMPNEXT = NULL, currMATCH = NULL, currVPSPEC = NULL, 
-             currVPHM = NULL, currVPFLAG = NULL, currVPPRE = NULL,
-             currVPNEXT = NULL, currPTBAR = NULL, 
+             currMPNEXT = NULL, currMATCH = NULL, currPTBAR = NULL, 
              currLSEQ = NULL, currSM = NULL, currPMFM = NULL, 
              index = 0, CSVindex = 0, MDindex = 0, 
              plotSizes = data.frame("PlotName" = "PlotName", "Size" = "Size",

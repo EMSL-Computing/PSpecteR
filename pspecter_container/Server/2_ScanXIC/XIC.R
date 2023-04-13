@@ -49,17 +49,17 @@ list(
   
     # Determine XIC X range (RT) 
   output$XICxRange <- renderUI({
-    XIC <- getXIC()
+    XIC <- GET_XIC()
     if (is.null(XIC)) {return(NULL)}
-    highest <- max(XIC$rt)
+    highest <- max(XIC$RT)
     sliderInput("XICx", "Retention Time Range", 0, highest, c(0, highest), 0.1, width = "150%")
   }),
   
   # Determine XIC Y range (INT)
   output$XICyRange <- renderUI({
-    XIC <- getXIC()
+    XIC <- GET_XIC()
     if (is.null(XIC)) {return(NULL)}
-    highest <- max(XIC$int) + 1
+    highest <- max(XIC$Intensity) + 1
     sliderInput("XICy", "Intensity Range", 0, highest, c(0, highest), 10, width = "150%")
   }),
   

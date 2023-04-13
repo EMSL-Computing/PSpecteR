@@ -160,19 +160,6 @@ observeEvent(input$ssScan_row_last_clicked, {
   
 }),
 
-# Reset all current 3. Vis PTM plots when new row is clicked
-observeEvent(input$VPmetrics_row_last_clicked, {
-  
-  # Get active tab
-  tab <- input$VisPTMtabs
-  
-  # Clear all plots not in tabs
-  if ("Spectrum" %in% tab == F) {plots$currVPSPEC <- NULL}
-  if ("Error Map" %in% tab == F) {plots$currVPHM <- NULL}
-  if ("Sequence" %in% tab == F) {plots$currVPFLAG <- NULL}
-  
-}),
-
 # Reset all current 4. Protein Tree plots when new row is clicked
 observeEvent(input$PTTable_row_last_clicked, {
   plots$currMATCH <- plots$currPTBAR <- plots$currLSEQ <- NULL
@@ -181,9 +168,9 @@ observeEvent(input$PTTable_row_last_clicked, {
 # Create an image name for SS (done to prevent having highly repetive code)
 getSSImgName <- reactive({
   scanNum <- 0
-  if (is.null(getScan()) == F) {
-    scan <- getScan()
-    clicked <- getScanClick()
+  if (is.null(GET_scan_metadata()) == F) {
+    scan <- GET_scan_metadata()
+    clicked <- GET_scan_click()
     scanNum <- scan[clicked, 2]}
   return(paste(plots$index, "_Scan_", scanNum, "_Tol_", input$ssTolerance, "ppm", sep = ""))
 }),
@@ -192,9 +179,9 @@ getSSImgName <- reactive({
 getMPImgName <- reactive({
   scanNum <- 0
   Pre.MZ <- 0
-  if (is.null(getScan()) == F) {
-    scan <- getScan()
-    clicked <- getScanClick()
+  if (is.null(GET_scan_metadata()) == F) {
+    scan <- GET_scan_metadata()
+    clicked <- GET_scan_click()
     scanNum <- scan[clicked, 2]
     Pre.MZ <- scan[clicked, 8]
   }
@@ -202,29 +189,13 @@ getMPImgName <- reactive({
                "_Window_", input$MPwindow, "mz", sep = ""))
 }),
 
-# Create an image name of Vis PTM
-getVPImgName <- reactive({
-  scanNum <- 0
-  sequence <- ""
-  modifications <- "No Modifications"
-  if (is.null(getVPMetrics()) == F) {
-    scanNum <- getScan()[getScanClick(), "Scan.Num"]
-    modifications <- paste(getVPMetrics()[getVPClick(), "Name"])
-    sequence <- getNewVSeq()
-    tol <- input$vpTolerance
-  }
-  return(paste(plots$index, "_Scan_", scanNum, "_Modifications_",
-        modifications, "_Sequence_", sequence, "_Tolerance_",
-        tol, "ppm", sep = ""))
-}),
-
 # Create an image name of PT
 getPTImgName <- reactive({
   protein <- "protein"
-  if (is.null(getPTID()) == F) {
+  if (is.null(GET_protein_ID()) == F) {
     clicked <- input$PTTable_row_last_clicked
     if (is.null(clicked)) {clicked <- 1}
-    PTID <- getPTID()
+    PTID <- GET_protein_ID()
     protein <- as.character(PTID[clicked, 1])}
   return(paste(plots$index, "_Protein_", protein, sep = ""))
 }),
@@ -242,51 +213,28 @@ observeEvent(input$imgSPEC, {
         withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")),
       
       column(12, uiOutput("ssSpecXRange")), 
-      column(6, numericInput("ssSpecMin", "Min MZ", NULL, width = "100%")),
-      column(6, numericInput("ssSpecMax", "Max MZ", NULL, width = "100%")),
+      column(6, numericInput("ssSpecMin", "Min MZ", min(GET_peak_data()$`M/Z`), width = "100%")),
+      column(6, numericInput("ssSpecMax", "Max MZ", max(GET_peak_data()$`M/Z`), width = "100%")),
       column(6, actionButton("ssSpecNewRange", "Update M/Z Slider")),
       column(6, actionButton("ssSpecMZreset", "Reset M/Z Slider")),
       column(12, hr()), 
       column(12, uiOutput("ssSpecYRange")),
-      column(6, numericInput("ssIntMin", "Min Int", NULL, width = "100%")),
-      column(6, numericInput("ssIntMax", "Max Int", NULL, width = "100%")),
+      column(6, numericInput("ssIntMin", "Min Int", min(GET_peak_data()$Intensity), width = "100%")),
+      column(6, numericInput("ssIntMax", "Max Int", max(GET_peak_data()$Intensity), width = "100%")),
       column(6, actionButton("ssSpecNewINT", "Update Intensity Slider")),
       column(6, actionButton("ssSpecINTreset", "Reset Intensity Slider"))),
       
       title = HTML('<p style="text-align: center;">Select <em><strong>MZ & Intensity Ranges</strong></em> 
                  for the spectra</p>'),
-      footer = list(uiOutput("exNumberPeaks"),
+      footer = list(
         actionButton("ssSpecAdd", "Add Spectra"), modalButton("Exit")),
       size = "l", easyClose = F))}
 }),
 
-# Print number of peaks
-output$exNumberPeaks <- renderText({
-  
-  # Return NULL if no num peaks
-  if (is.null(getSSPeak())) {return(NULL)}
-  
-  # Pull peaks and subset by filters
-  peaks <- getSSPeak()
-  
-  # If no filters then proceed forward
-  if (is.null(input$ssSpecX) == F && is.null(input$ssSpecY) == F) {
-    peaks <- peaks[peaks$mz >= min(input$ssSpecX) & peaks$mz <= max(input$ssSpecX) &
-                   peaks$intensity >= min(input$ssSpecY) & peaks$intensity <= max(input$ssSpecY),]
-  }
-  
-  # Set export number of peaks
-  revals$exportPeakNum <- nrow(peaks)
-  
-  # Paste number of peaks
-  paste("Number of Peaks:", revals$exportPeakNum)
-  
-}),
-
 # Graph spectra in modal box
 output$exSPEC <- renderPlotly({
-  if (is.null(getSSPeak())) {return(NULL)}
-  if (nrow(getSSPeak()) > 10000) {
+  if (is.null(GET_peak_data())) {return(NULL)}
+  if (nrow(GET_peak_data()) > 10000) {
     sendSweetAlert(session, "Export Spectra Warning", 
                    "Spectra exportation limited to plots with no more than 10,000 peaks.",
                    type = "warning")
@@ -301,7 +249,7 @@ output$exSPEC <- renderPlotly({
 
 # Reset Spectra MZ
 observeEvent(input$ssSpecMZreset, {
-  peak <- getSSPeak()
+  peak <- GET_peak_data()
   if (is.null(peak)) {return(NULL)}
   highest <- round(max(peak$mz), 3)
   updateSliderInput(session, "ssSpecX", value = c(0, highest))
@@ -309,7 +257,7 @@ observeEvent(input$ssSpecMZreset, {
 
 # Reset Intensity MZ
 observeEvent(input$ssSpecINTreset, {
-  peak <- getSSPeak()
+  peak <- GET_peak_data()
   if (is.null(peak)) {return(NULL)}
   highest <- round(max(peak$intensity))
   updateSliderInput(session, "ssSpecY", value = c(0, highest))
@@ -317,11 +265,6 @@ observeEvent(input$ssSpecINTreset, {
 
 # Add spectra if button is clicked
 observeEvent(input$ssSpecAdd, {
-  
-  if (is.null(revals$exportPeakNum)) {
-    sendSweetAlert(session, "No Peaks to Plot", type = "error")
-    return(NULL)
-  }
   
   plots$index <- plots$index + 1
   plots$currSPEC <- plots$currSPEC %>% 
@@ -383,17 +326,17 @@ output$exXIC <- renderPlotly({
 
 # Reset Spectra MZ
 observeEvent(input$XICresetRT, {
-  XIC <- getXIC()
+  XIC <- GET_XIC()
   if (is.null(XIC)) {return(NULL)}
-  highest <- round(max(XIC$rt), 3)
+  highest <- round(max(XIC$RT), 3)
   updateSliderInput(session, "XICx", value = c(0, highest))
 }),
 
 # Reset Intensity MZ
 observeEvent(input$XICresetINT, {
-  XIC <- getXIC()
+  XIC <- GET_XIC()
   if (is.null(XIC)) {return(NULL)}
-  highest <- round(max(XIC$int))
+  highest <- round(max(XIC$Intensity))
   updateSliderInput(session, "XICy", value = c(0, highest))
 }),
 
@@ -452,76 +395,6 @@ observeEvent(input$imgMPNEXT, {
     revals$imgData[[name]] <- plots$currMPNEXT} 
 }),
 
-# Add Vis PTM spectra to the exportable table
-observeEvent(input$imgVPSPEC, {
-  if (is.null(plots$currVPSPEC)) {
-    sendSweetAlert(session, title = "No Vis PTM Spectra to Export", type = "error")} else {
-        
-    if (nrow(getSSPeak()) > 10000) {
-      sendSweetAlert(session, "Export Spectra Warning", 
-                     paste("Spectra exportation limited to plots with no more than 10,000 peaks.",
-                           "Fix in 2. Scan & XIC by setting an intensity filter."),
-                     type = "warning")
-      return(NULL)
-    }  
-      
-    sendSweetAlert(session, title = "Vis PTM Spectra Snaphsot", 
-      "Click 'Export Snapshot Images' in the right hand corner to see plots.", type = "success")
-    plots$index <- plots$index + 1
-    name <- paste(getVPImgName(), "_Spectra", sep = "")
-    revals$imgData[[name]] <- plots$currVPSPEC}
-}),
-
-# Add Vis PTM Heatmap to the exportable table
-observeEvent(input$imgVPHM, {
-  if (is.null(plots$currVPHM)) {
-    sendSweetAlert(session, title = "No Vis PTM Error Map to Export", type = "error")} else {
-    sendSweetAlert(session, title = "Vis PTM Error Map Snaphsot", 
-      "Click 'Export Snapshot Images' in the right hand corner to see plots.", type = "success")
-    plots$index <- plots$index + 1
-    name <- paste(getVPImgName(), "_ErrorMap", sep = "")
-    revals$imgData[[name]] <- plots$currVPHM}
-}),
-
-# Add Vis PTM Seq Flag to the exportable table
-observeEvent(input$imgVPFLAG, {
-  if (is.null(plots$currVPFLAG)) {
-    sendSweetAlert(session, title = "No Vis PTM Sequence to Export", type = "error")} else {
-    sendSweetAlert(session, title = "Vis PTM Sequence Snaphsot", 
-      "Click 'Export Snapshot Images' in the right hand corner to see plots.", type = "success")
-    plots$index <- plots$index + 1
-    name <- paste(getVPImgName(), "_Sequence", sep = "")
-    revals$imgData[[name]] <- plots$currVPFLAG}
-}),
-
-# Add Protein Alignment (Match) to exportable table
-observeEvent(input$imgMATCH, {
-  if (is.null(plots$currMATCH)) {
-    sendSweetAlert(session, title = "No Match to Export", type = "error")} else {
-    
-    # Modify the spectra x and y range before it is added
-    showModal(modalDialog(fluidPage(
-      
-      plotlyOutput("exMATCH", width = "100%", height = "250px") %>% 
-        withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c")),
-      
-      column(12, uiOutput("PTxRange")), 
-      column(6, numericInput("PTposMin", "Min Pos", NULL, width = "100%")),
-      column(6, numericInput("PTposMax", "Max Pos", NULL, width = "100%")),
-      column(6, actionButton("PTposNew", "Update Position Slider")),
-      column(6, actionButton("PTposreset", "Reset Position Slider")),
-      column(12, hr()), 
-      column(12, uiOutput("PTyRange")),
-      column(6, numericInput("PTscanMin", "Min Scan", NULL, width = "100%")),
-      column(6, numericInput("PTscanMax", "Max Scan", NULL, width = "100%")),
-      column(6, actionButton("PTscanNew", "Update Scan Slider")),
-      column(6, actionButton("PTscanreset", "Reset Scan Slider"))),
-      title = HTML('<p style="text-align: center;">Select <em><strong>Position & Scan</strong></em> 
-               for the spectra</p>'),
-      footer = list(actionButton("PTAdd", "Add Protein Tree"), modalButton("Exit")),
-      size = "l", easyClose = F))} 
-}),
-
 # Graph XIC in modal box
 output$exMATCH <- renderPlotly({
   plots$currMATCH %>% 
@@ -531,7 +404,7 @@ output$exMATCH <- renderPlotly({
 
 # Reset Spectra MZ
 observeEvent(input$PTposreset, {
-  PT <- getProteinTree()
+  PT <- GET_protein_table()
   if (is.null(PT)) {return(NULL)}
   highest <- max(PT$Total)
   updateSliderInput(session, "PTx", value = c(0, highest))
@@ -539,7 +412,7 @@ observeEvent(input$PTposreset, {
 
 # Reset Intensity MZ
 observeEvent(input$PTscanreset, {
-  PT <- getProteinTree()
+  PT <- GET_protein_table()
   if (is.null(PT)) {return(NULL)}
   highest <- max(PT$Scan) + 1
   updateSliderInput(session, "PTy", value = c(0, highest))

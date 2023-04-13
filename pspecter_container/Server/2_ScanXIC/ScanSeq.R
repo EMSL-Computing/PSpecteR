@@ -240,7 +240,7 @@ list(
   output$ssSpecXRange <- renderUI({
     peak <- GET_peak_data()
     if (is.null(peak)) {return(NULL)}
-    highest <- round(max(peak$mz), 3)
+    highest <- round(max(peak$`M/Z`), 3)
     sliderInput("ssSpecX", "M/Z Range", 0, highest, c(0, highest), 0.01, width = "150%")
   }),
   
@@ -248,7 +248,7 @@ list(
   output$ssSpecYRange <- renderUI({
     peak <- GET_peak_data()
     if (is.null(peak)) {return(NULL)}
-    highest <- round(max(peak$intensity))
+    highest <- round(max(peak$Intensity))
     sliderInput("ssSpecY", "Intensity Range", 0, highest, c(0, highest), 1, width = "150%")
   }),
   

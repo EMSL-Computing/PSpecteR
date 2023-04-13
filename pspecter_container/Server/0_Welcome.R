@@ -33,7 +33,8 @@ list(
   output$citation <- renderText({
     HTML('<p><strong><span style="font-size: 22px;">FIRST TIME USERS:&nbsp;</span></strong><span style="font-size: 22px;">
          <p><strong>Please cite:&nbsp;<a href="https://pubs.acs.org/doi/full/10.1021/acs.jproteome.0c00857">Degnan et al 2021</a></strong></p> 
-         Please enable &quot;Description Mode&quot; under &quot;App Settings&quot; on the Uploads Page.&nbsp;</span></p>')
+         Please enable &quot;Description Mode&quot; under &quot;App Settings&quot; on the Uploads Page.&nbsp;</span></p>
+         <p>GUI Version: 2.0.0, Package Version: 1.1.0, R Version: 4.2.2</p>')
   })
 
 )
