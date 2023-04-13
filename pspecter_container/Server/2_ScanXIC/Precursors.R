@@ -26,7 +26,8 @@ list(
       Window = ifelse(is.null(input$MPwinsize), 3, input$MPwinsize),
       Sequence = GET_sequence(),
       IsotopicPercentageFilter = ifelse(is.null(input$MPpercdiff), 25, input$MPpercdiff),
-      Interactive = TRUE
+      Interactive = TRUE,
+      AlternativeGlossary = GET_glossary()
     )[[1]] 
     
     plots$currMPPRE <- Pre
@@ -51,7 +52,8 @@ list(
       Window = ifelse(is.null(input$MPwinsize), 3, input$MPwinsize),
       Sequence = GET_sequence(),
       IsotopicPercentageFilter = ifelse(is.null(input$MPpercdiff), 25, input$MPpercdiff),
-      Interactive = TRUE
+      Interactive = TRUE,
+      AlternativeGlossary = GET_glossary()
     )[[2]]
     
     plots$currMPNEXT <- Next

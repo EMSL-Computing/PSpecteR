@@ -307,8 +307,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        bsCollapsePanel("Export Data",
          downloadButton("SCANcsv", "Export Scan Metadata"), HTML("<p></p>"),
          downloadButton("PEAKcsv", "Export Peak Data"), HTML("<p></p>"),
-         downloadButton("FRAGcsv", "Export Annotated Peak Data"), HTML("<p></p>"),
-         downloadButton("ALLIONcsv", "Export Annotation per Residue Table"))))),
+         downloadButton("FRAGcsv", "Export Matched (Annotated) Peak Data"))))),
     
     # This sidebar text output lets the user know how much of the peptide sequence
     # is explained by the fragments in the spectrum.
