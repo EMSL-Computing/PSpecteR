@@ -76,11 +76,11 @@ is also a description mode with pop-ups that we suggest new users try out.
 knitr::include_graphics("DescriptionsAndData.png")
 ```
 
-## PSpecteR Light
+## PSpecteR Light Version Only
 
 Click "Browse" to open your system's file explorer to upload your data. 
 
-## PSpecteR
+## PSpecteR Version Only
 
 Click a dropdown menu to set the output directory or upload an MS, ID, or FA file. Use the “Search Folders” button to select a file,
 
@@ -98,8 +98,8 @@ knitr::include_graphics("UploadGif2.gif")
 
 ## Page Description
 
-MS & XIC allows you to see how well a peptide sequence maps to a specific MS scan. 
-Visualize fragmentation patterns, extracted ion chromatograms (XICs), the best 
+MS & XIC allows you to see how well a peptide/protein sequence matches to a specific MS scan. 
+Here you can also visualize fragmentation patterns, extracted ion chromatograms (XICs), the best 
 identified fragment ion per peptide, and more.
 
 ## Plots and Tables
@@ -115,7 +115,7 @@ knitr::include_graphics("MSMatchedPeaks.gif")
 **MS/MS:** Hover over the peaks to get the identified ion name, m/z value, and 
 intensity value. Ion names are broken down into fragment type (N-terminus: a, b, 
 c; C-terminus: x, y, z), charge in superscript, and isotope (M+n). Specific 
-fragments can be selected with the table under ‘Filter Ions.” Colors for ion types 
+fragments can be selected with the table under "Filter Ions." Colors for ion types 
 are consistent throughout figures: a - green, b - blue, c - purple, x - dark pink, 
 y - red, and z - orange. Use the "Filter Ions" table to select specific peaks, 
 and "Peak Matching Settings" to change tolerances, minimal correlations, etc. Set
@@ -140,8 +140,8 @@ time peaks across all MS1 scans for peaks with the XIC MZ value. Traces can be
 specified as isotopes and adjacent charge states. Use the charge state slider to 
 make XICs based on the number of isotopes (i.e. selected isotopes of 0, 1, 2 
 would result in traces for mz + 0/charge, mz + 1/charge, mz + 2/charge) or based 
-on adjacent charge state (i.e. selected charges of 1, 2, 3 woud result in traces o
-f mz/1, mz/2, mz/3). Retention time and intensity data are drawn collectively 
+on adjacent charge state (i.e. selected charges of 1, 2, 3 woud result in traces of mz/1, mz/2, mz/3). 
+Retention time and intensity data are drawn collectively 
 from all the MS1 scans in the file. You can change charges, retention time windows,
 isotopes and charges in XIC Settings. 
 
@@ -191,9 +191,8 @@ knitr::include_graphics("SequencePlot.png")
 ```
 
 **Annotated Sequence:** See the lowest ppm error per N-terminus (a, b, or c) 
-and C-terminus (x, y, or z) ion per residue. Hover-over to see the PPM error of 
-each fragment. Post-translational modifications are visualized with small
-boxes and the first 6 characters of their name. Use the Glossary page to add your
+and C-terminus (x, y, or z) ion per residue. Post-translational modifications are 
+visualized with small boxes and the first 6 characters of their name. Use the Glossary page to add your
 own modifications. There are several options to make these plots more appealing
 under "Plot Settings" and "Sequence Plot Settings". You can add or remove charge
 states, set the plot wrap size (number of residues per line), add or remove
@@ -241,6 +240,90 @@ show up in the Ion Type selection and can be added to any spectra.
 *Test Different Sequence:* Enter an amino acid string or ProForma string (amino acid
 with mass modifications in brackets) to see its fit on the selected spectra. Modifications
 are pulled from the Glossary. Unknown mass shifts are also supported. To test a sequence, 
+click the "Apply Seq" button. Selecting a new row in the Scan Metadata table will
+change the visualized amino acid sequence, or "Restore Seq" will reset the sequence
+to its original annotation. 
+
+**Spectrum Plot Settings**
+
+*Label Size:* A numeric indicating the size of the spectral annotations in ggplot dimensions.
+
+*Set Label Distance:* The offset in M/Z for each of the annotation labels. Default
+is 0. 
+
+*Annotate Spectra:* A True/False to indicate whether annotation labels should be 
+included. The default is True. 
+
+**MS1 Plots Settings:**
+
+*Filter by Percent Error:* Percentage written as a number between 0-100 to filter 
+potential isotopes by relative abundance. Default is 10.
+
+*Set MS1 Window Size:* Size of the MS1 plotting window from the Precursor M/Z in units of M/Z. 
+
+**Sequence Plot Settings:**
+
+*Add Charge:* A True/False to indicate whether the annotation for charge states should be included
+in the plot. This does not remove charge states; rather, the annotation for charge states. 
+
+*Set Wrap Size:* An integer to index how many letters should be printed before wrapping.
+
+*Annotate Modifications:* A True/False to indicate whether the modification on the residue
+should be removed in the plot.
+
+*Set PTM Annotation Size:* The size of the PTM labels
+
+**Table Column Settings:**
+
+*Select Scan Metadata Table Columns:* Enable or disable the visualization of 
+specific columns in the Scan Metadata table. 
+
+*Select Fragment Columns:* nable or disable the visualization of 
+specific columns in the Filter Ions table. 
+
+**XIC Settings:**
+
+*m/z:* Select the m/z value to extract the ion chromatogram. The autofilled 
+value is the calculated mass. 
+
+*Retention Time Window (min):* Select the retention time, in +/- minutes to 
+calculate the XIC. 
+
+*Select Isotopes:* Choose the number of isotopes for the calculation of XICs. The range is 
+from 0 (monoisotopic) to the 5th isotope. 
+
+*Select Charges:* Choose the number of charge states for the calculation of XICs. The
+range is 1-3. 
+
+*Smooth XIC Lines:* Apply a smoothing function to the XIC. It should only be 
+applied on small retention time windows. 
+
+# Test and Visualize PTMs
+
+## Page Descriptions
+
+Visualize PTM allows you to determine if a specific spectra and sequence pairing 
+would be a better fit based on one or more post-translational modifications. There
+are two modes for searching PTM sequences: Dynamic Modification Search will generate
+every possible PTM based on input parameters, and Single Modification will allow
+users to input individual ProForma strings to search. 
+
+## Workflow 
+
+1. Set Parameters: All parameters for matching peaks are set in the Visualize MS & XIC page.
+They can be viewed in the "Preselected Parameters" tab in the sidebar. 
+
+2. Add Modifications: Use Dynamic and/or Single Modification search to append a table
+of potential modifications. When ready, click "Calculate Modifications." At any point, 
+you can clear all output with "Clear Proteoform Options."
+
+3. Visualize Modifications: Click through the table of modifications to visualize 
+each option. 
+
+## Plots And Tables 
+
+
+
 
 
 
