@@ -25,7 +25,7 @@ list(
 
   # Add link to the user manual 
   output$manual <- renderUI({
-    tags$a(href = file.path("PSpecteR_Manual_ver1_0_0.html"), 
+    tags$a(href = file.path("PSpecteR_Manual_Version_2.0.0.html"), 
            target = "blank", "Click here to read the PSpecteR Manual!")
   }),
   

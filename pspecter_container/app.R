@@ -550,7 +550,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
              
              tagList(
                fileInput("ms1ftFile", "Upload MS1FT Data: ms1ft", accept = ".ms1ft"),
-               fileInput("targetsFile", "Upload IC Tagets Data: tsv", accept = ".tsv")
+               fileInput("targetsFile", "Upload IC Targets Data: tsv", accept = ".tsv")
              )
              
            },               
