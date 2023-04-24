@@ -1,0 +1,43 @@
+## David Degnan, Pacific Northwest National Labs
+## Last Updated: 2023_05_01
+## PSpecteR BASE IMAGE Version: 2.0.0
+## Tag: pspecterbase:2.0.0
+## Command: docker build -f Dockerfile_v.2.0.0_BaseImage .
+
+# Install R Version 4.2.2
+FROM rocker/shiny:4.2.2
+
+# Install Ubuntu Dependencies
+RUN apt-get update && apt-get install -y \
+    sudo \
+    pandoc \
+    pandoc-citeproc \
+    libcurl4-gnutls-dev \
+    libcairo2-dev \
+    libxt-dev \ 
+    libssl-dev \
+    libssh2-1-dev \
+    libxml2-dev \ 
+    libnetcdf-dev \
+    libnetcdff-dev \
+    build-essential \
+    chrpath \
+    libxft-dev \ 
+    libfreetype6-dev \ 
+    libfreetype6 \ 
+    libfontconfig1-dev \
+    libfontconfig1 \
+    mono-devel
+
+# Install packages from package install script 
+COPY Install_Packages_Linux.R /srv/shiny/
+WORKDIR /srv/shiny/
+RUN Rscript "Install_Packages_Linux.R" 
+
+# Install pspecterlib develop version
+Run Rscript -e "devtools::install_github('EMSL-Computing/pspecterlib@develop')
+
+# Install Phantom JS
+RUN wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2
+RUN tar xvjf phantomjs-2.1.1-linux-x86_64.tar.bz2 -C /usr/local/share/
+RUN ln -s /usr/local/share/phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local/bin/
