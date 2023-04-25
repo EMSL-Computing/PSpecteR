@@ -21,9 +21,6 @@ library(data.table)
 library(plotly)
 library(DT)
 
-# Add support packages
-library(xlsx)
-
 # If the test files are not in the right directory, copy and move them 
 #source(file.path("Server", "PrepTestFiles.R"), local = T)$value
 #prepTestFiles()
@@ -641,7 +638,7 @@ server <- function(input, output, session) {
   targetsPath <- reactiveVal(NULL)
   
   # Load description data 
-  Desc <- xlsx::read.xlsx(file.path("Server", "Pop_Up_Functions", "Function_Descriptions.xlsx"), 1) %>% na.omit() %>% data.frame()
+  Desc <- fread(file.path("Server", "Pop_Up_Functions", "Function_Descriptions.csv")) %>% na.omit() %>% data.frame()
   
   # Set environment variables
   #Environment <- read.csv("/SetEnvironment.csv", header = T)
