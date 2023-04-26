@@ -152,7 +152,7 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
     bsCollapse(multiple = T, 
      bsCollapsePanel(title = HTML('<p><strong>APP SETTINGS</strong></p>'), uiOutput("infoSWITCH")),
      bsCollapsePanel(title = HTML('<p><strong>USE TEST FILES</strong></p>'),
-       uiOutput("testBUSWITCH"), uiOutput("testTDSWITCH")
+       uiOutput("testBUSWITCH") #, uiOutput("testTDSWITCH")
      )), width = 3),
     mainPanel(htmlOutput("testUpload")))),
    

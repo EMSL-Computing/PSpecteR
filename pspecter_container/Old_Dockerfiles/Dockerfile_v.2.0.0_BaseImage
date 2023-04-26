@@ -65,3 +65,7 @@ RUN Rscript -e "rawrr::installRawrrExe()"
 RUN apt-get update && apt-get install -y gdb
 RUN apt-get update && apt-get install -y lldb
 RUN apt-get install mono-runtime libmono-system-data4.0-cil -y
+
+# Add missing packages
+RUN Rscript -e "devtools::install_github('sneumann/Rdisop', upgrade = 'always', dependencies = TRUE)"
+RUN Rscript -e "install.packages('webshot', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
