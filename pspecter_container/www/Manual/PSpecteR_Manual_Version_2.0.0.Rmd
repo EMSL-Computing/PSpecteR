@@ -56,10 +56,8 @@ quickly. Any unique modifications can be added in the glossary.
 
 All data from the application can be exported with widgets in the sidebar, and 
 all plots are resizable with a draggable symbol on the bottom right hand corner. 
-Quick snapshots of plots can be taken within the plot windows with the camera icon.
-For higher quality images, take image snapshots with widgets in the sidebar and 
-export with the button in the top right of the application called "Export Snapshot
-Images."
+Snapshots of plots can be taken within the plot windows with the camera icon.
+For higher quality images, simply make the image larger. 
 
 # Upload Data 
 

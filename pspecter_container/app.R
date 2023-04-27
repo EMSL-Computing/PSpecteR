@@ -293,18 +293,19 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
      ),      
 
      # Export Images & Data
-     bsCollapsePanel("Snapshot Images and Export Data", bsCollapse(multiple = T, 
-       bsCollapsePanel("Snapshot Images",               
-         actionButton("imgSPEC", "Spectrum"),
-         actionButton("imgHM", "Error Map"), HTML("<p></p>"), 
-         actionButton("imgMPPRE", "Previous MS1"),
-         actionButton("imgMPNEXT", "Next MS1"), HTML("<p></p>"),
-         actionButton("imgXIC", "XIC"),
-         actionButton("imgSSBAR", "Barchart")), 
-       bsCollapsePanel("Export Data",
+     bsCollapsePanel("Export Data", #bsCollapse(multiple = T, 
+       #bsCollapsePanel("Snapshot Images",               
+      #   actionButton("imgSPEC", "Spectrum"),
+      #   actionButton("imgHM", "Error Map"), HTML("<p></p>"), 
+      #   actionButton("imgMPPRE", "Previous MS1"),
+      #   actionButton("imgMPNEXT", "Next MS1"), HTML("<p></p>"),
+      #   actionButton("imgXIC", "XIC"),
+      #   actionButton("imgSSBAR", "Barchart")), 
+      # bsCollapsePanel("Export Data",
          downloadButton("SCANcsv", "Export Scan Metadata"), HTML("<p></p>"),
          downloadButton("PEAKcsv", "Export Peak Data"), HTML("<p></p>"),
-         downloadButton("FRAGcsv", "Export Matched (Annotated) Peak Data"))))),
+         downloadButton("FRAGcsv", "Export Matched (Annotated) Peak Data")
+    )),
     
     # This sidebar text output lets the user know how much of the peptide sequence
     # is explained by the fragments in the spectrum.
@@ -408,10 +409,10 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
          numericInput("PTToleranceQValue", "Q-Value Maximum", 1, min = 0, max = 1, step = 0.01),
          numericInput("PTToleranceScore", "Score Maximum (Enter values like: 1e-10)", 1, min = 0, max = 1),
          uiOutput("PTContSWITCH")),
-       bsCollapsePanel("Take Image Snapshot",
-                       actionButton("imgMATCH", "Coverage"),
-                       actionButton("imgPTBAR", "Bar"),
-                       actionButton("imgLSEQ", "Lit Seq")),
+       #bsCollapsePanel("Take Image Snapshot",
+       #                actionButton("imgMATCH", "Coverage"),
+      #                 actionButton("imgPTBAR", "Bar"),
+       #                actionButton("imgLSEQ", "Lit Seq")),
        bsCollapsePanel("Export Data", 
                        downloadButton("PTcsv", "Export Protein Coverage Data"))),
        htmlOutput("QValWarn"), width = 3),
@@ -517,8 +518,9 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
        bsCollapse(open = list("Subset Data", "Select Variables"),
         multiple = T, bsCollapsePanel("Subset Data", uiOutput(
           "SMscannumUI"),  uiOutput("SMmslevelUI")),
-        bsCollapsePanel("Select Variables", uiOutput("xSMui"), uiOutput("ySMui"), uiOutput("labSMui")),
-        bsCollapsePanel("Take Image Snapshot", actionButton("imgSM", "Spectra Metadata Plot"))), width = 3), 
+        bsCollapsePanel("Select Variables", uiOutput("xSMui"), uiOutput("ySMui"), uiOutput("labSMui")) #,
+        #bsCollapsePanel("Take Image Snapshot", actionButton("imgSM", "Spectra Metadata Plot"))
+      ), width = 3), 
        mainPanel(
          jqui_resizable(plotlyOutput("SMplot", width = "100%", height = "500px")) %>% 
            withSpinner(type = 5, color = getOption("spinner.color", default = "#275d0c"))))),
@@ -553,9 +555,10 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
            },               
                          
            uiOutput("testMS1FTSWITCH")),
-         bsCollapsePanel("Protein Annotation", uiOutput("PMproteinChoose")),
-         bsCollapsePanel("Take Image Snapshot", 
-           actionButton("imgPMFM", "ProMex Feature Map"))), width = 3),
+         bsCollapsePanel("Protein Annotation", uiOutput("PMproteinChoose")) #,
+         #bsCollapsePanel("Take Image Snapshot", 
+         #   actionButton("imgPMFM", "ProMex Feature Map"))
+         ), width = 3),
       mainPanel(
         uiOutput("ms1ftWarn"), uiOutput("PMproteinWarn"), hr(), 
         jqui_resizable(plotlyOutput("PMFM", width = "100%", height = "400px")) %>% 
@@ -581,8 +584,8 @@ ui <- navbarPage(id = "mainTabs", inverse = T, title = ifelse(LightVersion, "PSp
    ########################################
    ## ADD CONSISTENT EXPORT IMAGE BUTTON ##
    ########################################
-   div(id = "js_imgbutton", style = "position:absolute;top:8px;right:16px;z-index:1000", 
-       actionButton("exportIMG", "Export Snapshot Images")),   
+   #div(id = "js_imgbutton", style = "position:absolute;top:8px;right:16px;z-index:1000", 
+   #     actionButton("exportIMG", "Export Snapshot Images")),   
    
    #####################
    ## CHANGE DEFAULTS ##

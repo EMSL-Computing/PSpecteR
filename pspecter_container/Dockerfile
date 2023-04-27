@@ -2,8 +2,8 @@
 ## Last Updated: 2023_05_01
 
 ## PSpecteR FULL IMAGE Version: 2.0.0
-## Command: docker build -t docker.artifactory.gov/pspecter/pspecter:2.0.0 .
-## Run: docker run -p 2753:2753  docker.artifactory.gov/pspecter/pspecter:2.0.0
+## Command: docker build -t docker.artifactory.pnnl.gov/pspecter/pspecter:2.0.0 .
+## Run: docker run -p 2753:2753  docker.artifactory.pnnl.gov/pspecter/pspecter:2.0.0
 
 ## You must first build Dockerfile_v.1.0.1_BaseImage in Old Docker Files
 FROM docker.artifactory.pnnl.gov/pspecter/pspecterbase:2.0.0
