@@ -1,0 +1,641 @@
+---
+title: "PSpecteR Manual Version 2.0.0"
+author: "David J. Degnan, Lisa M. Bramer, Amanda M. White, Mowei Zhou, Aivett Bilbao, Lee Ann McCue"
+date: "2023-04-20"
+output: 
+  BiocStyle::html_document:
+          toc_float: true
+          code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# PSpecteR Description
+
+## Abstract
+
+Visual examination of mass spectrometry data is necessary to assess data quality and to facilitate data exploration. Graphics provide the means to evaluate spectral properties, test alternative peptide/protein sequence matches, prepare annotated spectra for publication, and fine-tune parameters during wet lab procedures. Visual inspection of LC-MS data is hindered by proteomics visualization software designed for particular workflows (e.g. bottom-up or top-down analyses; support for ThermoFisher raw files or XML-based, etc.) or vendor specific tools without open-source code. We built PSpecteR, an open-source and interactive R Shiny web application to address these issues, with support for several steps of proteomics data processing, including: reading various mass spectrometry files, running open-source database search engines, labelling spectra with fragmentation patterns, testing post-translational modifications, plotting where identified fragments map to reference sequences, and visualizing algorithmic output and metadata. All figures, tables, and spectra are exportable within one easy-to-use graphical user interface. Our current software provides a flexible and modern R framework to support fast implementation of additional features. The open-source code is readily available (https://github.com/EMSL-Computing/PSpecteR), and a PSpecteR Docker container (https://hub.docker.com/r/emslcomputing/pspecter) is available for easy local installation.
+
+## Version Explanations 
+
+There are two version of PSpecteR:
+
+**PSpecteR**: The full version of the application which includes the ability to run
+MS-GF+ and MSPathFinder. 
+
+**PSpecteR Light:** A simpler version of the application which does not include 
+MS-GF+ and MSPathFinder. It also does not include file autodetection and loading.
+
+## Module Descriptions
+
+```{r ModuleDescription, echo = FALSE}
+knitr::include_graphics("ModuleDescriptors.png")
+```
+
+**Upload Data:** Upload either an XML-based (.mzML, .mzXML) MS file, or a ThermoFisher (.raw) file.
+For identification data, currently only mzid data is supported. FASTA files are optional. 
+Example datasets are included within the application. 
+
+**MS & XIC:** Visualize peptide and protein identifications overlayed on experimental
+mass spectra data. Extracted ion chromatograms are also calculated and visualized. 
+
+**Test and Visualize PTMs:** Use ProForma strings to test the fit of alternative 
+proteoforms. There are widgets and shorthand options to test multiple modifications
+quickly. Any unique modifications can be added in the glossary. 
+
+**Protein Coverage:** Visualize where identified peptides overlay on protein sequences. 
+
+**Additional Plots:** There are 2 available plots - plotting metadata, and ProMex
+(part of the MSPathFinder suite) feature identification data.
+
+**Glossary:** Append the glossary of post-translational modifications with your own. 
+
+## Note about all data and plots
+
+All data from the application can be exported with widgets in the sidebar, and 
+all plots are resizable with a draggable symbol on the bottom right hand corner. 
+Snapshots of plots can be taken within the plot windows with the camera icon.
+For higher quality images, simply make the image larger. 
+
+# Upload Data 
+
+This page allows the user to upload:
+
+* A required mass spectrometry file (MS): mzML, mzXML, or Thermo Fisher raw
+
+* An optional protein ID file (ID): mzid
+
+* An optional protein database file (FA): fasta
+
+You may also choose the test files at the bottom of the "Upload Data" page. There 
+is also a description mode with pop-ups that we suggest new users try out. 
+
+```{r UploadData, echo = FALSE}
+knitr::include_graphics("DescriptionsAndData.png")
+```
+
+## PSpecteR Light Version Only
+
+Click "Browse" to open your system's file explorer to upload your data. 
+
+## PSpecteR Version Only
+
+Click a dropdown menu to set the output directory or upload an MS, ID, or FA file. Use the “Search Folders” button to select a file,
+
+```{r, echo = FALSE}
+knitr::include_graphics("UploadGif1.gif")
+```
+
+or type in an acceptable file path, which will give a check mark for a correct path or a red X for an incorrect path. Click “Use Path” to load the file, or “Clear Path” to remove it. When typing in a MS file path, if the ID and FA file paths have the same name, directory, and correct extension, they will autofill.
+
+```{r, echo = FALSE}
+knitr::include_graphics("UploadGif2.gif")
+```
+
+# MS & XIC 
+
+## Page Description
+
+MS & XIC allows you to see how well a peptide/protein sequence matches to a specific MS scan. 
+Here you can also visualize fragmentation patterns, extracted ion chromatograms (XICs), the best 
+identified fragment ion per peptide, and more.
+
+## Plots and Tables
+
+All plots are plotly graphics which allow for zooming, panning, autoscaling, and 
+filtering by category within the legend. All tables are DT tables which can be 
+sorted (multi-sorting is enabled with shift), searched, and subsetted.
+
+```{r MS, echo = FALSE}
+knitr::include_graphics("MSMatchedPeaks.gif")
+```
+
+**MS/MS:** Hover over the peaks to get the identified ion name, m/z value, and 
+intensity value. Ion names are broken down into fragment type (N-terminus: a, b, 
+c; C-terminus: x, y, z), charge in superscript, and isotope (M+n). Specific 
+fragments can be selected with the table under "Filter Ions." Colors for ion types 
+are consistent throughout figures: a - green, b - blue, c - purple, x - dark pink, 
+y - red, and z - orange. Use the "Filter Ions" table to select specific peaks, 
+and "Peak Matching Settings" to change tolerances, minimal correlations, etc. Set
+label sizes and distances with "Plot Settings" and "Spectrum Plot Settings."
+
+```{r ErrorMap, echo = FALSE}
+knitr::include_graphics("PTMHeatmap.png")
+```
+
+**Error Map:** See the PPM error (how far off the theoretical m/z is from the experimental m/z) 
+per residue and ion type. Too many ions? Try removing isotopes in the "Peak Match Settings."
+Each square is colored by PPM error where red indicates a positive error and blue 
+a negative error. PPM error is calculated by (experimental mz - theoretical mz / 
+theoretical mz) * 1e6. 
+
+```{r XIC, echo = FALSE}
+knitr::include_graphics("XIC.png")
+```
+
+**XIC:** Generate XICs (extracted ion chromatograms) of the intensity vs retention 
+time peaks across all MS1 scans for peaks with the XIC MZ value. Traces can be 
+specified as isotopes and adjacent charge states. Use the charge state slider to 
+make XICs based on the number of isotopes (i.e. selected isotopes of 0, 1, 2 
+would result in traces for mz + 0/charge, mz + 1/charge, mz + 2/charge) or based 
+on adjacent charge state (i.e. selected charges of 1, 2, 3 woud result in traces of mz/1, mz/2, mz/3). 
+Retention time and intensity data are drawn collectively 
+from all the MS1 scans in the file. You can change charges, retention time windows,
+isotopes and charges in XIC Settings. 
+
+```{r MS1Plot, echo = FALSE}
+knitr::include_graphics("MS1Plot.png")
+```
+
+**Previous/Next MS1:** View the MS1 precursor spectrum with labelled isotopes and 
+within the isolation window for previous and next precursors. The red lines are 
+indicative of the theoretical m/z value for a given peptide. Hover over boxes 
+display m/z, intensity, isotope, reference intensity listed as a proportion, 
+and the percent difference (exp intensity - theo intensity / exp intensity) * 100%. 
+Matched ions can be filtered by percent difference. Percent error filtering and
+MS1 window sizes can be changed in "MS1 Plot Settings" under "Plot Settings." 
+
+```{r FilterIons, echo = FALSE}
+knitr::include_graphics("FilterIons.gif")
+```
+
+**Filter Ions:** Filter the annotated MS/MS spectra by selecting ions in the 
+filter ions table. Ion data can be exported under "Export Data" with the 
+"Export Matched (Annotated) Peak Data"
+
+```{r ScanMetadata, echo = FALSE}
+knitr::include_graphics("UsingtheTable.gif")
+```
+
+**Scan Metadata Table:** View metadata from both MS and ID files. From the MS data, 
+scan number, MS level, retention time, precursor m/z, precursor charge, precursor scan, 
+and activation method are extracted. From the ID data, sequence, protein ID, mass, score, 
+q-value (an adjusted p-value based on false discovery rate - FDR), whether the 
+protein is a decoy (reverse sequence peptide used to calculate FDR), and a 
+protein description are extracted. Clicking on a row will trigger all the 
+Scan and XIC visualization. Columns can be added or removed with "Table Column Settings." 
+Tables can be searched (dialog boxes) and sorted (arrows). To select a range, like from 3 to 5, 
+type "3 … 5" into the search box. Holding shift allows for sorting with multiple 
+categories. Above the scan metadata is the number of peaks for that mass spectra, 
+along with coverage, which is the perecentage of amino acids in the sequence with
+at least one fragment assigned to it, excluding the first amino acid from the 
+N-terminus direction. The table can be scrolled horizontally if not all the 
+columns fit. All data for this table can be exported in "Export Data" with 
+"Export Scan Metadata". For a selected spectra, export peak data with "Export
+Peak Data." 
+
+```{r SequencePlot, echo = FALSE}
+knitr::include_graphics("SequencePlot.png")
+```
+
+**Annotated Sequence:** See the lowest ppm error per N-terminus (a, b, or c) 
+and C-terminus (x, y, or z) ion per residue. Post-translational modifications are 
+visualized with small boxes and the first 6 characters of their name. Use the Glossary page to add your
+own modifications. There are several options to make these plots more appealing
+under "Plot Settings" and "Sequence Plot Settings". You can add or remove charge
+states, set the plot wrap size (number of residues per line), add or remove
+modification annotations, and set the annotation label size. 
+
+```{r IonAnnotation, echo = FALSE}
+knitr::include_graphics("IonAnnotation.png")
+```
+
+**Ion Annotation:** See counts of ions supporting each residue. The format is 
+ion type (a, b, c, x, y, z), charge state, and isotope (written like M+n). The 
+monoisotopic peak is just an M. 
+
+```{r IonBarplot, echo = FALSE}
+knitr::include_graphics("IonBarChart.png")
+```
+
+**Ion Bar Chart:** See the number of ions identified per type. Get counts of all
+ions, ions with isotopes removed, and completely unique ions per charge state (without
+isotopes or charge states). 
+
+## Input Widgets
+
+**Peak Match Settings**
+
+*PPM Tolerance:* The ppm error threshold between calculated fragments. Default is 10. 
+
+*Intensity Minimum:* A filter that removes intensity values below this threshold. Can
+be used to reduce the number of peaks plotted in a spectra. 
+
+*Minimum Pearson Correlation Score:* A minimum correlation score to filter isotopes 
+by. Range is 0 to 1. Default is 0. This filter is more useful for top-down datasets.
+
+*Ion Type:* Determine which ion types to calculate. a, b, c, x, y, z are supported. 
+Additional ion types can be added in "Manage Ions." 
+
+*Include Isotopes:* A logical to indicates whether isotopes should be calculated. 
+FALSE = Faster Calculations. Default is TRUE. 
+
+*Manage Ions:* A button that opens up a menu for adding up to 6 mass modified 
+ions per ion type. Users can select their ion type, a symbol (+, ++, -, --, ^, ^^), 
+and the mass change to represent that change. The new mass modified ion will then
+show up in the Ion Type selection and can be added to any spectra. 
+
+*Test Different Sequence:* Enter an amino acid string or ProForma string (amino acid
+with mass modifications in brackets) to see its fit on the selected spectra. Modifications
+are pulled from the Glossary. Unknown mass shifts are also supported. To test a sequence, 
+click the "Apply Seq" button. Selecting a new row in the Scan Metadata table will
+change the visualized amino acid sequence, or "Restore Seq" will reset the sequence
+to its original annotation. 
+
+**Spectrum Plot Settings**
+
+*Label Size:* A numeric indicating the size of the spectral annotations in ggplot dimensions.
+
+*Set Label Distance:* The offset in M/Z for each of the annotation labels. Default
+is 0. 
+
+*Annotate Spectra:* A True/False to indicate whether annotation labels should be 
+included. The default is True. 
+
+**MS1 Plots Settings:**
+
+*Filter by Percent Error:* Percentage written as a number between 0-100 to filter 
+potential isotopes by relative abundance. Default is 10.
+
+*Set MS1 Window Size:* Size of the MS1 plotting window from the Precursor M/Z in units of M/Z. 
+
+**Sequence Plot Settings:**
+
+*Add Charge:* A True/False to indicate whether the annotation for charge states should be included
+in the plot. This does not remove charge states; rather, the annotation for charge states. 
+
+*Set Wrap Size:* An integer to index how many letters should be printed before wrapping.
+
+*Annotate Modifications:* A True/False to indicate whether the modification on the residue
+should be removed in the plot.
+
+*Set PTM Annotation Size:* The size of the PTM labels
+
+**Table Column Settings:**
+
+*Select Scan Metadata Table Columns:* Enable or disable the visualization of 
+specific columns in the Scan Metadata table. 
+
+*Select Fragment Columns:* nable or disable the visualization of 
+specific columns in the Filter Ions table. 
+
+**XIC Settings:**
+
+*m/z:* Select the m/z value to extract the ion chromatogram. The autofilled 
+value is the calculated mass. 
+
+*Retention Time Window (min):* Select the retention time, in +/- minutes to 
+calculate the XIC. 
+
+*Select Isotopes:* Choose the number of isotopes for the calculation of XICs. The range is 
+from 0 (monoisotopic) to the 5th isotope. 
+
+*Select Charges:* Choose the number of charge states for the calculation of XICs. The
+range is 1-3. 
+
+*Smooth XIC Lines:* Apply a smoothing function to the XIC. It should only be 
+applied on small retention time windows. 
+
+# Test and Visualize PTMs
+
+## Page Descriptions
+
+Visualize PTM allows you to determine if a specific spectra and sequence pairing 
+would be a better fit based on one or more post-translational modifications. There
+are two modes for searching PTM sequences: Dynamic Modification Search will generate
+every possible PTM based on input parameters, and Single Modification will allow
+users to input individual ProForma strings to search. 
+
+## Workflow 
+
+1. Set Parameters: All parameters for matching peaks are set in the Visualize MS & XIC page.
+They can be viewed in the "Preselected Parameters" tab in the sidebar. 
+
+2. Add Modifications: Use Dynamic and/or Single Modification search to append a table
+of potential modifications. When ready, click "Calculate Modifications." At any point, 
+you can clear all output with "Clear Proteoform Options."
+
+3. Visualize Modifications: Click through the table of modifications to visualize 
+each option. 
+
+## Plots And Tables
+
+```{r, VisualizePTMs, echo = FALSE}
+knitr::include_graphics("VisPTM.png")
+```
+
+After selecting modifications and running the VisPTM algorithm, users can see 
+how well each modified sequence matches the spectra based on the input parameters
+from "Visualize MS & XIC" and summarized in "Preselected Parameters." The table
+can be sorted by best to worst match (based on coverage, etc.), and for each row
+selected in the table, a matched spectra and sequence diagrams will be generated. 
+
+## Input Widgets 
+
+**Dynamic Modifications Search**
+
+*Modifications:* Select up to two modifications at a time. All potential proteoforms
+for these modifications will be generated. Users can append their own modifications 
+in the Glossary. 
+
+*Maximum Number of Modifications:* Select the maximum number of modifications 
+per string. The default is 1 with a maximum of 2. 
+
+*Add to list of proteoforms to match:* Once the selections for "Modifications"
+and "Maximum Number of Modifications" are made, click this button to add all unique 
+combinations to a list of modifications to match. It will appear in a table
+on the bottom of the screen. 
+
+**Single Modification Search**
+
+*Add a sequence to test in ProForma format:* Manually enter the ProForma sequence
+to test. A help message will show up below the string to inform you of any mistakes
+detected in the input. 
+
+*Add to list of proteoforms to match:* Click this button to add your ProForma 
+string to the list of modifications to match. It will appear in a table
+on the bottom of the screen, unless the specific proteoform has already been 
+added. 
+
+**Run VisPTM**
+
+On the main page of the application, there are two buttons. 
+
+*Clear Proteoform Options:* Removes all modification selections in the list. 
+
+*Calculate Modifications:* Runs the VisPTM algorithm on the table of potential
+modifications. A loading bar will show progress, and when completed, each individual
+proteoform can be ranked by score and visualized. 
+
+**Export Data**
+
+*Export Modifications Data:* To export the results of VisPTM on the "Test PTMs" 
+page, click this button. 
+
+# Protein Coverage
+
+## Page Description
+
+Visualize where identified peptides map to literature sequences. 
+
+## Plots and Tables
+
+```{r ProteinCoverage, echo = F}
+knitr::include_graphics("ProteinCoverage.png")
+```
+
+**Coverage:** See where every identified peptide sequence maps to the literature
+protein sequence. Hover-over information gives more information about peptide 
+start and end positions, the peptide sequence, the scan number, and the score. 
+To view a different protein, click a d
+
+```{r ProteinBar, echo = F}
+knitr::include_graphics("ProteinBar.png")
+```
+
+**Bar:** View the number of times each residue in the literature sequence was identified.
+
+```{r ProteinSeq, echo = F}
+knitr::include_graphics("ProteinSeq.png")
+```
+
+**Literature Sequence:** See the full literature sequence with identified peptide regions in green.
+
+```{r ProteinTable, echo = F}
+knitr::include_graphics("ProteinTable.png")
+```
+
+**Protein Table:** View the number of times a peptide was associated with a protein,
+and other information including the median score across all identified peptides 
+and a peptide description. 
+
+## Input Widgets 
+
+**Protein Coverage Settings**
+
+*Select a Score to Colore the Coverage Plot by:* Choose a score for coloring
+the plot. Options are Q-Value, Score, and None.
+
+*Q-Value Maximum:* Set a maximum Q-Value to filter peptides by. The default is 1
+(no filtering).
+
+*Score Maximum:* Set a maximum Score to filter peptides by. The default is 1 
+(no filtering).
+
+*Remove Contaminants:* Remove all peptides mapping to contaminants. Default is True. 
+
+# Additional Plots and Features
+
+## Spectra Metadata 
+
+**Page Description:** Visualize metadata from the "Scan Metadata" table in 
+"Visualize MS & XIC."
+
+**Plots and Tables:** 
+
+```{r SpectraMetadata, echo = F}
+knitr::include_graphics("SpectraMetadata.png")
+```
+
+Set x-axis, y-axis, and label colors to metadata variables. Each point is a specific
+scan number.
+
+**Input Widgets:**
+
+*Scan Range:* Use the sliders to select a range of scan numbers to visualize.
+
+*MS Level:* Use the sliders to select the MS levels of variables to visualize. 
+
+*Select X Variable:* Choose from Scan Number, Retention Time, Precursor M/Z, 
+Precursor Scan, Calculated Mass, and Experimental Mass for plotting on the x-axis. 
+
+*Select Y Variable:* Choose from Scan Number, Retention Time, Precursor M/Z, 
+Precursor Scan, Calculated Mass, and Experimental Mass for plotting on the y-axis.
+
+*Select Label:* Choose from MS Level, Precursor Charge, Score, and Q-Value for
+coloring the points by. Note that some of these options may not be available 
+if only mass spectrometry (MS) data was provided. 
+
+## ProMex Feature Map 
+
+**Page Description:** Create an interactive plot from MSPathFinder’s ProMex.exe output.
+
+**Plots and Tables:**
+
+```{r ProMex, echo = F}
+knitr::include_graphics("ProMex.png")
+```
+
+Visualize features from MS1FT files along with any associated proteins. 
+A static (non-interactive) version of this plot is exported by ProMex.exe. A table 
+of features and associated proteins is provided below. Unlike the rest of the PSpecteR
+application, this table is not linked to the plot. .
+
+**Input Widgets:**
+
+*Upload MS1FT data:* Upload a .ms1ft file from ProMex. Required.
+
+*Upload IC Targets Data:* Upload an IC targets file from ProMex. Optional. This 
+file provides peptide/protein mapping information. 
+
+*Use MS1FT & IC Targets Test File?* Use test data for this plot. 
+
+*Filter by Protein:* Filter the plot by protein mappings. Only available if an IC
+targets file is provided.
+
+
+## Glossary 
+
+**Page Description:** Append a locally stored version of the Unimod Glossary of post-translational modifications.
+
+**Plots and Tables:**
+
+```{r Glossary, echo = F}
+knitr::include_graphics("Glossary.png")
+```
+
+View the glossary of post-translational modifications. Note that the glossary 
+can be updated with your own CSV of modifications (title must match those of this 
+table), or with a pop-up menu. Appended modifications will show up first in the table.
+New modifications can be easily exported in the sidebar. 
+
+**Input Widgets:**
+
+*Add Modifications:* Trigger a pop-up menu to add named modifications. Molecular 
+formula are not required. 
+
+*Add Glossary File:* Add a csv of modifications. This can be a previously exported
+list of modifications from "Export Added Modifications." New modifications are
+always appended to the first rows of the table. 
+
+# Database Search 
+
+For the full PSpecteR version (not PSpecteR Light) only: 
+
+## MS-GF+
+
+**Description:** Run bottom-up files through the peptide database search tool MS-GF+.
+
+**Usage:** Generates the commands to run MS-GF+ in its own container.
+
+**Parameters:**
+
+1. Run Algorithm
+
+* Run MSGF+: Run MSGF+ with these files and parameters in another docker container
+
+* Get Status: Check on MSGF+ job. The returning status will be PENDING, STARTED, SUCCESS (completed), and FAILED (errored out).
+
+2. Upload Parameter File:
+
+* Upload Parameter File (txt): Upload a default parameters file. There is one auto loaded into PSpecteR as an example.
+
+## MSPathFinder
+
+**Description:** Run top-down files through the peptide database search tool MSPathFinder.
+
+**Usage:** Generates the commands to run MSPathFinder in its own container.
+
+**Parameters:**
+
+1. Run Algorithm
+
+* Run MSGF+: Run MSPathFinder with these files and parameters in another docker container.
+
+* Get Status: Check on MSPathFinder job. The returning status will be PENDING, STARTED, SUCCESS (completed), and FAILED (errored out).
+
+2. Set Parameters:
+
+* Charge: Set the min and max charge values for an acceptable peptide-spectra match.
+
+* Mass: Determine the min and max sequence masses in AMU.
+
+* Length: Set the min and max sequence length that should be considered when assigning peptide sequences to spectra.
+
+* Fragment Charge: Set the min and max fragment ion charges.
+
+* Precursor Tolerance: Set the maximum difference between the experimental and theoretical precursors.
+
+* Fragment Tolerance: Set the maximum difference between the experimental and theoretical fragments.
+
+* Database Search: Determine whether the decoy database should be searched to filter out peptide-spectra matches that map to common protein decoys.
+
+* Activation Method: Determine the activation (or fragmentation or dissociation) method used to generate fragments. CID is Collision-Induced Dissociation (vibration). ETD is Electron-Transfer Dissociation (radical cleavage). HCD is High-Energy CID. ECD is Electron-Capture Dissociation (ion–electron recombination). PQD is Pulsed Q Collision Induced Dissociation (vibration for smaller fragments). UVPD is Ultraviolet photodissociation (photon absorbation).
+
+3. Upload Modifications File
+
+* Upload Modifications File (txt): Upload a default modifications file. There is one auto loaded into PSpecteR as an example.
+
+# App Installation & Launch
+
+## Docker Design
+
+```{r ContainerDesign, echo = FALSE}
+knitr::include_graphics("ContainerDesign.png")
+```
+
+PSpecteR is comprised of three Docker containers: one for the Shiny app architecture, and two for the peptide database search tools MS-GF+ and MSPathFinderT. These containers share a mounted volume (data) for all file inputs and outputs (black arrows). The Shiny app container communicates with the other containers to start the database searches and return their status (blue arrows).
+
+The MS-GF+ and MSPathFinder containers are built as python flask apps with a redis server in the background and managed by celery tasks. PSpecteR constructs the URL calls to pass parameters and files to the other containers, and then the URL to check the task id of the current running jobs.
+
+## Installation
+
+We suggest downloading Docker Desktop at https://www.docker.com/products/docker-desktop.
+
+Create a directory called PSpecteR_Launch. Enter the folder and add a directory called data and copy the Docker-Compose file from https://github.com/EMSL-Computing/PSpecteR/tree/master/pspecter_container/DockerComposeFiles/ForDockerHub.
+
+For MacOS Terminal:
+
+```{r MacOS, eval = FALSE}
+mkdir PSpecteR_Launch; cd PSpecteR_Launch; mkdir data; wget https://raw.githubusercontent.com/EMSL-Computing/PSpecteR/master/pspecter_container/DockerComposeFiles/ForDockerHub/docker-compose.yml
+```
+
+For Windows Powershell:
+
+```{r Windows, eval = FALSE}
+mkdir PSpecteR_Launch; cd PSpecteR_Launch; mkdir data; wget https://raw.githubusercontent.com/EMSL-Computing/PSpecteR/master/pspecter_container/DockerComposeFiles/ForDockerHub/docker-compose.yml -Outfile docker-compose.yml
+```
+
+Pull the latest versions of the PSpecteR, MS-GF+, and MSPathFinderT containers.
+
+For MacOS terminal: 
+
+```{r MacOS2, eval = FALSE}
+docker pull emslcomputing/pspecter:1.0.0; docker pull emslcomputing/msgf:1.0; docker pull emslcomputing/mspathfindert:1.0
+```
+
+For Windows Powershell: 
+
+```{r Windows2, eval = FALSE}
+$env:PSPECTER_DATA = "."; docker-compose up -d 
+```
+
+More details on the windows-specific issue can be found here: https://github.com/microsoft/WSL/issues/4387
+
+## Launch with Docker
+
+In the PSpecteR_Launch directory, declare the PSPECTER_DATA variable and use the docker compose file.
+
+For MacOS Terminal:
+
+```{r DockerMacOS, eval = FALSE}
+export PSPECTER_DATA=$PWD; docker-compose up
+```
+
+For Windows Powershell: 
+
+```{r DockerWindows, eval = FALSE}
+$env:PSPECTER_DATA = "."; docker-compose up
+```
+
+Open with Docker Desktop or by going to http://localhost:3838/
+
+
+
+
+
+
+
+

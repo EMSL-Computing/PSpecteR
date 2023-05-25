@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_12_28
+## Last Updated: 2023_04_01
 
 # DESCRIPTION: This contains all the popover information for graphs and input widgets.
 
@@ -29,7 +29,8 @@ observeEvent(input$infoMode, {
               "imgSPEC", "imgHM", "imgMPPRE", "imgMPNEXT", "imgXIC", "imgSSBAR", 
               "imgFLAG", "SCANcsv", "PEAKcsv", "FRAGcsv", "ALLIONcsv", 
               "ssSpectrum", "ErrorMap", "XIC", "ssMatPre", "ssMatNext", 
-              "ssSeqTable", "ssSeqBar", "ssScan", "ssSeqFlag", "ssAllFrag")
+              "ssSeqTable", "ssSeqBar", "ssScan", "ssSeqFlag", "ssAllFrag",
+              "ManageIons", "seqCharge", "seqWrap", "seqPTMsize")
   
   visptm <- c("VPrseq", "VPclear", "VPcommon", "VPmaxmod", "VPmaxpep",
               "VPposs", "VPspecific", "imgVPSPEC", "imgVPHM", "imgVPFLAG", 

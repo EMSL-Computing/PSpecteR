@@ -1,0 +1,71 @@
+## David Degnan, Pacific Northwest National Labs
+## Last Updated: 2023_05_01
+## PSpecteR BASE IMAGE Version: 2.0.0
+## Tag: pspecterbase:2.0.0
+## Command: docker build -f Dockerfile_v.2.0.0_BaseImage -t docker.artifactory.pnnl.gov/pspecter/pspecterbase:2.0.0 .
+## Command: docker push docker.artifactory.pnnl.gov/pspecter/pspecterbase:2.0.0
+
+# Install R Version 4.2.2
+FROM rocker/shiny:4.2.2
+
+# Install Ubuntu Dependencies - broken up to identify failing package - mono. Removed for now. 
+RUN apt-get update && apt-get install -y sudo 
+RUN apt-get update && apt-get install -y pandoc 
+RUN apt-get update && apt-get install -y pandoc-citeproc 
+RUN apt-get update && apt-get install -y libcurl4-gnutls-dev 
+RUN apt-get update && apt-get install -y libcairo2-dev 
+RUN apt-get update && apt-get install -y libxt-dev 
+RUN apt-get update && apt-get install -y libssl-dev 
+RUN apt-get update && apt-get install -y libssh2-1-dev 
+RUN apt-get update && apt-get install -y libxml2-dev  
+RUN apt-get update && apt-get install -y libnetcdf-dev 
+RUN apt-get update && apt-get install -y libnetcdff-dev 
+RUN apt-get update && apt-get install -y build-essential 
+RUN apt-get update && apt-get install -y chrpath 
+RUN apt-get update && apt-get install -y libxft-dev 
+RUN apt-get update && apt-get install -y libfreetype6-dev 
+RUN apt-get update && apt-get install -y libfontconfig1-dev 
+RUN apt-get update && apt-get install -y libharfbuzz-dev 
+RUN apt-get update && apt-get install -y libfribidi-dev 
+RUN apt-get update && apt-get install -y libtiff5-dev
+
+# Install all R packages
+RUN Rscript -e "install.packages(c('ragg', 'textshapping'), INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+
+# Install devtools 
+RUN Rscript -e "install.packages('devtools', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+
+# Install pspecterlib
+RUN Rscript -e "devtools::install_github('EMSL-Computing/pspecterlib@develop', upgrade = 'always', dependencies = TRUE)"
+
+# Install other packages 
+RUN Rscript -e "install.packages(c('shiny', 'shinycssloaders', 'shinyWidgets', 'shinyBS', 'shinyjs', 'shinyjqui', 'shinyFiles', 'data.table', 'plotly', 'DT', 'xlsx'), INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+
+# Install Phantom JS - Removed image export for now (plotly graphics can still be snapshotted)
+#RUN wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2
+#RUN tar xvjf phantomjs-2.1.1-linux-x86_64.tar.bz2 -C /usr/local/share/
+#RUN ln -s /usr/local/share/phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/local/bin/
+
+# For some reason, it did not install any packages after shiny, so here they all are written one at a time. 
+RUN Rscript -e "install.packages('shinycssloaders', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+RUN Rscript -e "install.packages('shinyWidgets', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+RUN Rscript -e "install.packages('shinyBS', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+RUN Rscript -e "install.packages('shinyjs', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+RUN Rscript -e "install.packages('shinyjqui', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+RUN Rscript -e "install.packages('shinyFiles', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+RUN Rscript -e "install.packages('data.table', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+RUN Rscript -e "install.packages('plotly', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+RUN Rscript -e "install.packages('DT', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"
+
+# Add rawrr 
+RUN apt-get update && apt-get install -y mono-runtime
+RUN Rscript -e "devtools::install_github('fgcz/rawrr', upgrade = 'always', dependencies = TRUE)"
+RUN Rscript -e "rawrr::installRawFileReaderDLLs()"
+RUN Rscript -e "rawrr::installRawrrExe()"
+RUN apt-get update && apt-get install -y gdb
+RUN apt-get update && apt-get install -y lldb
+RUN apt-get install mono-runtime libmono-system-data4.0-cil -y
+
+# Add missing packages
+RUN Rscript -e "devtools::install_github('sneumann/Rdisop', upgrade = 'always', dependencies = TRUE)"
+RUN Rscript -e "install.packages('webshot', INSTALL_opts = c('--no-lock'), repos = 'https://cran.rstudio.com')"

@@ -1,5 +1,5 @@
 ## David Degnan, Pacific Northwest National Laboratory
-## Last Updated: 2020_06_09
+## Last Updated: 2023_04_01
 
 # DESCRIPTION: Contains all the functions to append the Glossary 
 
@@ -18,28 +18,9 @@ list(
                 "N-term" = "N-term", "C-term" = "C-term"),
   
   # All elements users can select from
-  eleNames <- c("Hydrogen"  =  "H", "Helium" = "He", "Lithium" = "Li", "Beryllium" = "Be", 
-                "Boron" = "B", "Carbon" = "C", "Nitrogen" = "N", "Oxygen" = "O", "Fluorine" = "F", 
-                "Neon" = "Ne", "Sodium" = "Na", "Magnesium" = "Mg", "Aluminium" = "Al", 
-                "Silicon" = "Si", "Phosphorus" = "P", "Sulfur" = "S", "Chlorine" = "Cl", 
-                "Argon" = "Ar", "Potassium" = "K", "Calcium" = "Ca", "Scandium" = "Sc", 
-                "Titanium" = "Ti", "Vanadium" = "V", "Chromium" = "Cr", "Manganese" = "Mn", 
-                "Iron" = "Fe", "Cobalt" = "Co", "Nickel" = "Ni", "Copper" = "Cu", "Zinc" = "Zn", 
-                "Gallium" = "Ga", "Germanium" = "Ge", "Arsenic" = "As", "Selenium" = "Se", 
-                "Bromine" = "Br", "Krypton" = "Kr", "Rubidium" = "Rb", "Strontium" = "Sr", 
-                "Yttrium" = "Y", "Zirconium" = "Zr", "Niobium" = "Nb", "Molybdenum" = "Mo", 
-                "Technetium" = "Tc", "Ruthenium" = "Ru", "Rhodium" = "Rh", "Palladium" = "Pd", 
-                "Silver" = "Ag", "Cadmium" = "Cd", "Indium" = "In", "Tin" = "Sn", "Antimony" = "Sb", 
-                "Tellurium" = "Te", "Iodine" = "I", "Xenon" = "Xe", "Caesium" = "Cs", "Barium" = "Ba", 
-                "Lanthanum" = "La", "Cerium" = "Ce", "Praseodymium" = "Pr", "Neodymium" = "Nd", 
-                "Promethium" = "Pm", "Samarium" = "Sm", "Europium" = "Eu", "Gadolinium" = "Gd", 
-                "Terbium" = "Tb", "Dysprosium" = "Dy", "Holmium" = "Ho", "Erbium" = "Er", 
-                "Thulium" = "Tm", "Ytterbium" = "Yb", "Lutetium" = "Lu", "Hafnium" = "Hf", 
-                "Tantalum" = "Ta", "Tungsten" = "W", "Rhenium" = "Re", "Osmium" = "Os", 
-                "Iridium" = "Ir", "Platinum" = "Pt", "Gold" = "Au", "Mercury" = "Hg", 
-                "Thallium" = "Tl", "Lead" = "Pb", "Bismuth" = "Bi", "Polonium" = "Po", 
-                "Astatine" = "At", "Radon" = "Rn", "Francium" = "Fr", "Radium" = "Ra", 
-                "Actinium" = "Ac", "Thorium" = "Th", "Protactinium" = "Pa", "Uranium" = "U"),
+  eleNames <- c("H", "C", "O", "N", "S", "P", "Na", "Cl", "K", "F", "I", "Se", 
+                "Br", "Hg", "Cu", "Fe", "Mo", "Si", "B", "As", "Li", "Ca", "Ni",
+                "Zn", "Ag", "Mg", "Al"),
   
   ###############
   ## OBSERVERS ##
@@ -49,8 +30,8 @@ list(
   observeEvent(input$glAdd, {
     
     showModal(modalDialog(fluidPage(fluidRow( 
-      column(3, textInput("glIN", "Interim Name", value = "New Modification")),
-      column(3, numericInput("glMASS", "Mass", 0, step = 1)),
+      column(3, textInput("glIN", "Modification", value = "New Modification")),
+      column(3, numericInput("glMASS", "Mass Change", 0, step = 1)),
       column(6, pickerInput("glMS", "Modified Sites", choices = modSites,
                 multiple = T, options = list(`live-search` = T, `actions-Box` = T)))),
     fluidRow(column(6, list(pickerInput("glEN", "Element Name", choices = eleNames,
@@ -80,7 +61,7 @@ list(
   observeEvent(input$glManAdd, {
     
     # Get the glossary data
-    Glossary <- getGlossary()
+    Glossary <- GET_glossary()
     
     # Catches if no modified sites have been selected
     if (is.null(input$glMS)) {
@@ -90,36 +71,69 @@ list(
     
     # Catches if no molecular formula has been generated
     if (gloss$molForm == "Generated Molecular Formula Appears Here") {
-      sendSweetAlert(session, "Glossary Amendment Error",
-        "Please construct a molecular formula", type = "error")
-      return(NULL)}
+      sendSweetAlert(session, "Glossary Amendment Warning",
+        "Unknown mass shifts are allowed, but since the molecular formula is unknown, this modification will not be accounted for in the isotope calculations.", type = "warning")
+      Sys.sleep(8)
+    }
+    
+    ## Generate line to be added to the Glossary
+    Modification <- input$glIN
+    MassChange <- input$glMASS
+    Residues <- paste(input$glMS, collapse = " ")
+    
+    # Extract the molecular formula
+    if (gloss$molForm != "Generated Molecular Formula Appears Here") {
+
+      MolFormSplit <- trimws(gloss$molForm) %>% strsplit(" ") %>% unlist()
+      Elements <- lapply(MolFormSplit, function(x) {gsub("[[:digit:]]", "", x)}) %>% unlist()
+      Counts <- lapply(MolFormSplit, function(x) {gsub("[[:alpha:]]", "", x)}) %>% unlist() %>% as.numeric()
+
+      # Make the row 
+      NewMod <- c(Modification, MassChange, Residues, Counts) %>% t() %>% data.frame()
+      colnames(NewMod) <- c("Modification", "Mass Change", "Residues", Elements)
+  
+      # Insist Numeric 
+      NewMod[colnames(NewMod) %in% Elements] <- as.numeric(NewMod[colnames(NewMod) %in% Elements])
+      
+    } else {
+      NewMod <- c(Modification, MassChange, Residues) %>% t() %>% data.frame()
+      colnames(NewMod) <- c("Modification", "Mass Change", "Residues")
+    }
+    NewMod$`Mass Change` <- as.numeric(NewMod$`Mass Change`)
+  
+    # Fix data types
+    gloss$AddedMods <- dplyr::bind_rows(gloss$AddedMods, NewMod)
+      
+    # Remove current molecular formula and the box
+    gloss$molForm <- "Generated Molecular Formula Appears Here"
     
     # Success message that makes people feel warm and fuzzy inside
     sendSweetAlert(session, "Glossary Amended", "Modification added to Glossary!",
-      type = "success")
+                   type = "success")
     
-    # Generate line to be added to the Glossary
-    Accession.Number <- max(Glossary$Accession.Number) + 1
-    PSI.MS.Name <- Interim.Name <- Description <- input$glIN
-    Monoisotopic.Mass <- input$glMASS
-    Average.Mass <- NA
-    Composition <- Molecular.Formula <- trimws(gloss$molForm)
-    Modified.Sites <- paste(input$glMS, collapse = " ")
-    NewMod <- c(Accession.Number, PSI.MS.Name, Interim.Name, Description,
-                Monoisotopic.Mass, Average.Mass, Composition, Molecular.Formula,
-                Modified.Sites)
-    gloss$AddedMods <- data.frame(rbind(gloss$AddedMods, NewMod), stringsAsFactors = F)
-    colnames(gloss$AddedMods) <- c("Accession.Number", "PSI.MS.Name", "Interim.Name", 
-                "Description", "Monoisotopic.Mass", "Average.Mass", "Composition", 
-                "Molecular.Formula", "Modified.Sites")
-    
-    # Fix data types
-    gloss$AddedMods$Accession.Number <- as.numeric(gloss$AddedMods$Accession.Number)
-    gloss$AddedMods$Monoisotopic.Mass <- as.numeric(gloss$AddedMods$Monoisotopic.Mass)
-    
-    # Remove current molecular formula and the box
-    gloss$molForm <- "Generated Molecular Formula Appears Here"
     removeModal()
+    
+  }),
+  
+  # Add uploaded file 
+  observeEvent(input$glCSVadd, {
+    
+    # Read data 
+    new_data <- fread(input$glCSVadd$datapath)
+    
+    # Columns must all be in the glossary 
+    if (!all(colnames(new_data) %in% colnames(GET_glossary()))) {
+      sendSweetAlert(session, "Adding modifications to glossary error", 
+                     paste0("The following columns are not permitted: ", 
+                            paste(colnames(new_data)[colnames(new_data) %in% colnames(GET_glossary()) == FALSE], collapse = ", ")
+                            ),
+                     "error")
+      return(NULL)
+    }
+    
+    # Otherwise, bind to our list
+    gloss$AddedMods <- dplyr::bind_rows(gloss$AddedMods, new_data)
+    
   }),
   
   ##########################
@@ -128,8 +142,11 @@ list(
   
   # Glossary Table
   output$GlossTab <- DT::renderDataTable({
-    Glossary <- getGlossary()
-    datatable(Glossary[, c(as.integer(input$glCheckboxes)), drop = F], 
+    
+    # Pull the glossary 
+    Glossary <- GET_glossary()
+    
+    datatable(Glossary, 
               rownames = F, filter = 'top', options = list(pageLength = 10),
               selection = list(mode = 'single'))
   }),

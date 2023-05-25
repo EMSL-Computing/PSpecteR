@@ -1,0 +1,170 @@
+﻿Name,Title,Description
+mzmsFile,Mass Spectrometry File,"Upload an mzML, mzXML, h5, or ThermoFisher raw file."
+mzmsHandle,MS File Handle Name,Enter the filename of the MS file. Hse forward slashes. The default working directory the PSpecteR folder.
+mzmsHandleGo,Use MS File Handle,"If the file path is real and an acceptable MS file, this button will load the file into the app."
+mzmsHandleClear,Clear MS File Handle,This button will clear away any loaded MS files and any inputted file handles. 
+idFile,Protein ID File,Upload an mzid file that matches the MS file.
+idHandle,ID File Handle Name,Enter the filename of the ID file. Use forward slashes. The default working directory is the PSpecteR folder.
+idHandleGo,Use ID File Handle,"If the file path is real and an acceptable ID file, this button will load the file into the app."
+idHandleClear,Clear ID File Handle,This button will clear any loaded ID files and any inputted file handles.
+fastaFile,Fasta Database File,"Upload a fasta file (fa, FA, fasta, or FASTA) to generate an ID file or to visualize where identified peptide sequences map to proteins."
+fastaHandle,FA File Handle Name,Enter the filename of the FA file. Use forward slashes. The default working directory is the PSpecteR folder.
+fastaHandleGo,Use FA File Handle,"If the file path is real and an acceptable FA file, this button will load the file into the app."
+fastaHandleClear,Clear FA File Handle,This button will clear any loaded FA files and any inputted file handles.
+outputDirChoose,Select Output Directory,Search and select a folder to be the output directory.
+outputHandle,Output Folder Name,Enter the path of the output folder. Use forward slashes. The default output directory is Downloads.
+outputHandleGo,Use Output Handle,"If the folder path is real, this button will select that folder as the output folder."
+outputHandleClear,Clear Output Handle,This button will clear the current selection of the output folder and automatically move the output folder back to the default Downloads folder. 
+ionGroups,Fragment Type,"Choose which ion types to plot. Ions are automatically selected by activation method. HCD - b, y. CID - a, b, y. ETD - b, c, y, z. UVPD - a, b, c, x, y, z."
+ManageIons,Manage Ions (Add Mass Modified Ions),Add mass modified ions as potential ion types to match 
+ssTolerance,Fragment Tolerance,Select how close (+/-) experimental fragmentation m/z values must be to theoretical m/z values.
+ssIntenMin,Intensity Minimum,Select the minimum permissable value for intensity.
+ssIsoPerMin,Minimum Isotopic %,"Select the minimum isotopic percentage. For example, if a fragment has an isotope with m/z values 333.5, 334.5, and 335.5, and isotopic percentages of 80%, 15%, and 5%, respectively, a minimum percentage of 10% will remove the 335.5 m/z isotope."
+ssCorrScoreFilter,Minimum Correlation Score,Select the minimum correlation score value. Note that all peaks will be visualized when 'ALL’ is selected
+ssAnnoSize,Set Label Size,Change the size of the labels when annotations are enabled.
+ssLabDist,Select Relative Label Distance,"Since labels do not change position based on the x and y-axis, users must select how close or far they would like the labels from the peaks on the annotated spectrum. This is used to create graphics which are easier to read."
+ssLetter,Annotate Spectrum,"For each identified fragment, print the fragment type information by that peak on the spectra."
+RealTime,Edit Spectra in Real Time,This slider stops the MS/MS interactive plotly graphic from taking input from widgets so that necessary edits to the plot can be made without the plot re-generating after every individual change. This is a useful feature for spectra with many peaks. 
+ssLargeSpec,Spectra Full Screen,Make spectra full screen.
+ssISOspectra,Remove Isotopes: Spectra?,"Remove isotopes from all graphs, tables, and spectra. "
+ssNewSeq,Test Different Sequence,Sequence must contain valid amino acids. ProForma format is now accepted. See https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5837035/ 
+ssASeq,Apply Sequence,Identify fragments with entered sequence. 
+ssRSeq,Restore Sequence,Replace the current sequence with the one identified in the ID file for this scan. 
+MPpercdiff,MS1 Percent Difference,Set threshold for the +/- percent difference (measured intensity - expected intensity / expected intensity) * 100% for precursor isotope identification
+MPwinsize,Increase MS1 Window Size,Increase the window size for the isolation window. Max size is 50 m/z.
+MPlargePre,MS1 Large,View MS1 in a large pop up window.
+MPlargeNext,Next MS1 Large,View the next MS1 in a large pop up window.
+ssBarCTFrag,Count per Fragment in Bar Plot,Tally the count of ions per fragment (discounting charge/isotope) or all fragments (accounting for charge and isotope if enabled).
+ssAnoPTM,Annotates PTMs in Sequence,Display post-translational modifications in the annotated sequence figure as a label with no more than 6 characters.
+seqCharge,Annotate Charges in Sequence Plot,Enable or remove charge annotations in sequence plots. Default is remove. 
+seqWrap,Set Wrap Length for Sequence Plot,Tweak this parameter to make sequence plots look less crowded or less spaced out.
+seqPTMsize,Change the Label Size for PTMs in Sequence Plot,Change the PTM label size for readability
+ssISOgraphs,Remove Isotopes in Figures,"Remove isotopes from the Error Map, Annotated Sequence, and Barplot."
+ssCheckboxes,Select Scan Table Columns,Choose which columns to include in the scan table.
+ssFragColumns,Select Fragment Columns,"Choose which columns to include in the fragment table: ion type (e.g. a, b, c, etc.), amino acid position in the sequence, amino acid, charge, isotope, m/z, and correlation score."
+tolXIC,Set XIC Tolerance (ppm),Select the minimum tolerance window (how close experimental and theoretical values must be in ppm) for an extracted ion chromatogram
+XICmode,Charge State,View XIC traces by isotope or by adjacent charge state.
+isomaxXIC,Max Number of Isotopes,Autopopulate the input widget Select Isotopes with 1 to the max number of isotopes.
+isoXIC,Select Isotopes,Choose the isotopes to visualize.
+chargemaxXIC,Max Charge State,Autopopulate the select isotope window with 1 to the max charge state for the m/z charge states where m is the mass and z is each charge state.
+chargeTraceXIC,Select Charges,Choose the charge states to visualize.
+premzXIC,MZ,The precursor m/z is autofilled from the MS file. It can be changed.
+prechXIC,Charge,The precursor charge is autofilled from the MS file. It can be changed.
+imgSPEC,Spectrum,"Take a snapshot of the Spectrum as is. A pop up window will allow zooming capabilities. To see your images, click 'Export Snapshot Images'."
+imgHM,Error Map,Take a snapshot of the Heatmap as is. Click 'Export Snapshot Images' to see your images.
+imgMPPRE,Previous MP,Take a snapshot of the Previous Matched Precursors as is. Click 'Export Snapshot Images' to see your images.
+imgMPNEXT,Next MP,Take a snapshot of the Next Matched Precursors as is. Click 'Export Snapshot Images' to see your images.
+imgXIC,XIC,"Take a snapshot of the XIC as is. A pop up window will allow zooming capabilities. To see your images, click 'Export Snapshot Images'."
+imgSSBAR,Barchart,Take a snapshot of the Barchart as is. Click 'Export Snapshot Images' to see your images.
+imgFLAG,Sequence,Take a snapshot of the Sequence as is. Click 'Export Snapshot Images' to see your images.
+SCANcsv,Export MS & ID Data,Export scan metadata as CSV. 
+PEAKcsv,Export Peak Data,Export m/z and intensity values for the selected spectra as CSV. 
+FRAGcsv,Export Fragment Data,"Export information about identified framgents (a-c, x-z ions) as CSV."
+ALLIONcsv,Export All Ion Table,Export all identified ions for this sequence and spectra as a CSV.
+ssSpectrum,Annotated Spectra,"Hover over the peaks to get the identified ion name, m/z value, and intensity value. Ion names are broken down into fragment type (N-terminus: a, b, c; C-terminus: x, y, z), charge in superscript, and isotope (M+n). Specific fragments can be selected with the table under 'Filter Ions.” Colors for ion types are consistent throughout figures: a - green, b - blue, c - purple, x - dark pink, y - red, and z - orange. Select a specific annotated peak with the table in 'Filter Ions’. All peak data can be exported in the '7. Export Data’ section with the button 'Export Peak Data’"
+ErrorMap,Heatmap of Error per Ion Type,"See the PPM error (how far off the theoretical m/z is from the experimental m/z) per amino acid per ion type. Each square is colored by PPM error where red indicates a positive error and blue a negative error. PPM error is calculated by (exp mz - theo mz / theo mz) * 1e6. Isotopes are by default removed, but can be added under '4b. Fragment Figures” and the 'Remove Iso: Graphics?” toggle."
+XIC,Extracted Ion Chromatogram,"Generate XICs (extracted ion chromatograms) of the intensity vs retention time peaks across all MS1 scans for peaks with the XIC MZ value. Traces can be specified as either isotopes or adjacent charge states. Use the charge state slider to make XICs based on the number of isotopes (i.e. selected isotopes of 0, 1, 2 would result in traces for mz + 0/charge, mz + 1/charge, mz + 2/charge) or based on adjacent charge state (i.e. selected charges of 1, 2, 3 woud result in traces of mz/1, mz/2, mz/3). Retention time and intensity data are drawn collectively from all the MS1 scans in the file."
+ssMatPre,Previous Matched Precursor,"View the MS1 precursor spectrum with labelled isotopes and within the isolation window for previous and next precursors. The red lines are indicative of the theoretical m/z value for a given peptide. Hover over boxes display m/z, intensity, isotope, reference intensity listed as a proportion, and the percent difference (exp intensity - theo intensity / exp intensity) * 100%. Matched ions can be filtered by percent difference."
+ssMatNext,Next Matched Precursor,"View the next MS1 precursor spectrum with labelled isotopes and within the isolation window for previous and next precursors. The red lines are indicative of the theoretical m/z value for a given peptide. Hover over boxes display m/z, intensity, isotope, reference intensity listed as a proportion, and the percent difference (exp intensity - theo intensity / exp intensity) * 100%. Matched ions can be filtered by percent difference."
+ssSeqTable,Table of All Annotated Peaks,Filter the annotated MS/MS by selecting ions in the filter ions table. Ion data can be exported under '7. Export Data’ with the 'Export Fragment Data’ button.
+ssSeqBar,Bar Chart of Identified Ions,"See the number of ions identifed per type. Under '4b. Fragment Figures', isotopes may be removed or included, and the counts can be specified to one unique ion per fragment."
+ssScan,Scan Metadata Table,"View metadata from both MS and ID files. From the MS data, scan number, MS level, retention time, precursor m/z, precursor charge, precursor scan, and activation method are extracted. From the ID data, sequence, protein ID, mass, score, q-value (an adjusted p-value based on false discovery rate - FDR), whether the protein is a decoy (reverse sequence peptide used to calculate FDR), and a protein description. Clicking on a row will trigger all the Scan and XIC visualization. Columns can be added or removed with '5. Table Column Settings.” Tables can be searched (dialog boxes) and sorted (arrows). To select a range, like from 3 to 5, type '3 ... 5' into the search box. Holding shift allows for sorting with multiple categories. Above the scan metadata is the number of peaks for that mass spectra, along with coverage, which is the perecentage of amino acids in the sequence with at least one fragment assigned to it, excluding the first amino acid from the N-terminus direction. The table can be scrolled horizontally if not all the columns fit. All data for this table can be exported in '7. Export Data’ with the 'Export MS & ID Data’."
+ssSeqFlag,Flagged Sequence,"See the lowest ppm error per N-terminus (a, b, or c) and C-terminus (x, y, or z) ion per amino acid. Hover-over to see the PPM error of each fragment. Post-translational modifications are visualized with an asterisk with their name in the hover-over boxes."
+ssAllFrag,All Ions,Sort peptides by the number of ions identified in the MS/MS scan. All ions with isotopes are displayed.
+VPSequence,Enter Sequence,Sequence must contain at least 2 valid amino acids and no spaces. 
+VPrseq,Restore Seq,Replace the current sequence with the original.
+Vppick,Modifications,"Select PTMs from the Unimod database, which can be appended under the more tab with 'C. Unimod Glossary.”"
+VPclear,Clear PTMs,Remove selected modifications.
+VPcommon,Common PTMs,Select commonly annotated post translational modifications. 
+VPmaxmod,Max Number of Modifications per Sequence,Select the max number of modifications to pick per sequence. Wait times increase exponentially as this number increases.
+VPmaxpep,Max Number of Modifications per Each Peptide,Choose the max number of modifications per peptide. Wait times increase exponentially as this number increases.
+VPposs,Add these Possibilities to List of Proteoforms,"Add to list of proteoforms to calculate. Click ""Calculate Modifications"" when ready, or clear selections with ""Clear Proteoform Options."" "
+VPspecific,Manual Search,"Instead of iterating through all possible combinations of modifications, manual search allows users to apply any modifications to a sequence and get the calculated result of that one theoretical spectra (calculated with the modified sequence) and experimental spectra pairing. Clicking this button will trigger the 'Manual Modifications Search” pop-up."
+imgVPSPEC,PTM Spectra,"Take a snapshot of the PTM Spectrum as is. A pop up window will allow zooming capabilities. To see your images, click 'Export Snapshot Images'."
+imgVPHM,PTM Error Map,Take a snapshot of the PTM Error Map as is. Click 'Export Snapshot Images' to see your images.
+imgVPFLAG,PTM Sequence,Take a snapshot of the PTM Sequence as is. Click 'Export Snapshot Images' to see your images.
+imgVPPRE,PTM Previous Precursor,Take a snapshot of the PTM Previous Precursor as is. Click 'Export Snapshot Images' to see your images.
+imgVPNEXT,PTM Next Precursor,Take a snapshot of the PTM Next Precursor as is. Click 'Export Snapshot Images' to see your images.
+VPcsv,Export Modifications Data,Export all metrics for each modified sequence as a CSV.
+VPmarkdown,Export Markdown,Export all metrics and graphics for each modified sequence as a markdown file. It will open in an internet browser. 
+VPSpec,Visualize PTM Spectra,Modified (or unmodified) spectra with the same color patterns for fragments as 2. MS & XIC
+VPehm,Visualize PTM Error Map,See error map of all identified fragments for this spectra-sequence-modification combination.
+VPseqflags,Visualize PTM Sequence,See sequence of all identified fragments for this spectra-sequence-modification combination. 
+VPmatchpre,Visualize Matched Precursor Previous,Same as 2. MS & XIC
+VPmatchnext,Visualize Matched Precursor Next,Same as 2. MS & XIC
+VPmetrics,Table of all PTMs,"All dynamic and specific mod searches will appear here until the sequence, scan, or search parameters are changed. Export this data with '6. Export Data' as either a CSV or a visually appealing markdown file with spectra for every PTM in this table."
+DynamModSearch,Dynamic Modifications Search,"Generate and then search through multiple modifications combinatorially. A table will pop up and allow you to select modifications and either keep (“Keep Selected”) or delete (“Delete Selected”) them. When ready to run, click “Calculate” and a pop-up load bar will let you know when the samples are finished. The pop-up menu can be exited by selecting “Exit.”"
+ManualModSearch,Manual Modifications Search,"Click amino acids and apply specific modifications either from the Unimod database (which can be modified under “More” and “C. Unimod Glossary”) or as added masses. A correctly added PTM will turn the amino acid red, otherwise a pop-up warning will show up. Click “Calculate” when done, and the new modified sequence will be appended to the PTM table."
+PTTolerance,Q Value Tolerance,Determine the minimum adjusted p-value
+PTCont,Remove Contaminants,"Remove any proteins marked as contaminants from the dataset. Note that decoys will remain, if they pass the Q-Value filter."
+imgMATCH,Match Diagram,"Take a snapshot of the Match Diagram as is. A pop up window will allow zooming capabilities. To see your images, click 'Export Snapshot Images'."
+imgPTBAR,Bar Chart,Take a snapshot of the Protein Tree Bar Chart as is. Click 'Export Snapshot Images' to see your images.
+imgLSEQ,Literature Sequence,Take a snapshot of the identified sequences mapped on the literature sequences. Click 'Export Snapshot Images' to see your images.
+PTcsv,Protein Tree Data,"Export the number of instances of each protein identified, along with a description, as a CSV. "
+PTMatch,Match Diagram,See where every identified peptide sequence maps to the literature protein sequence. Hover-over information reveals the scan number and sequence.
+PTBar,Bar Chart of Identified Amino Acids,View the number of times each amino acid in the literature sequence was identified.
+LSeq,Annotated Literature Sequence,See the full literature sequence with identified peptide regions in green.
+PTTable,Table of Identified Proteins,View the number of times each peptide was associated with a protein. Clicking a row of the Protein Table creates all three visualizations above for that selected protein.
+BURun,Run MSGF+,Run MSGF+ with these files and parameters in another docker container
+BUgetstatus,Get MSGF+ Status,"Check on MSGF+ job. The returning status will be PENDING, STARTED, SUCCESS (completed), and FAILED (errored out). "
+BUParamFile,Upload a parameters file,Upload a default parameters file. There is one auto loaded into PSpecteR as an example.
+TDRunAll,Run MSPathFinder,Run MSPathFinder with these files and parameters in another docker container. 
+TDgetstatus,Get MSPathFinder Status,"Check on MSPathFinder job. The returning status will be PENDING, STARTED, SUCCESS (completed), and FAILED (errored out). "
+TDCharge,Set Charges,Set the min and max charge values for an acceptable peptide-spectra match.
+TDMass,Set Masses,Determine the min and max sequence masses in AMU.
+TDLength,Set Length,Set the min and max sequence length that should be considered when assigning peptide sequences to spectra.
+TDFragCharge,Set Fragment Charge,Set the min and max fragment ion charges.
+TDPrecursorTol,Set Precursor Tolerance (PPM),Set the maximum difference between the experimental and theoretical precursors.
+TDFragmentTol,Set Fragment Tolerance (PPM),Set the maximum difference between the experimental and theoretical fragments.
+TDDatabaseSearch,Database Search,Determine whether the decoy database should be searched to filter out peptide-spectra matches that map to common protein decoys.
+TDActMet,Set Activation Method,Determine the activation (or fragmentation or dissociation) method used to generate fragments. CID is Collision-Induced Dissociation (vibration). ETD is Electron-Transfer Dissociation (radical cleavage). HCD is High-Energy CID. ECD is Electron-Capture Dissociation (ion–electron recombination). PQD is Pulsed Q Collision Induced Dissociation (vibration for smaller fragments). UVPD is Ultraviolet photodissociation (photon absorbation).
+TDModFile,Modifications File,Upload a default modifications file. There is one auto loaded into PSpecteR as an example.
+SMscannum,Scan Range,Select the minimum and maximum scan numbers to visualize in the metadata plot.
+SMmslevel,MS Level,Select the minimum and maximum MS levels to visualize in the metadata plot.
+xSM,Select X Variable,Choose the x-axis for the metadata plot.
+ySM,Select Y Variable,Choose the y-axis for the metadata plot.
+labSM,Select Label,Choose how to color the points for the metadata plot.
+SMplot,Spectra Metadata Plot,"Set x-axis, y-axis, and label coordinates to metadata variables. Each point is a scan number. Values can be filtered by Scan Range and MS Level. "
+imgSM,Export Spectra Metadata Plot,Take a snapshot of the Spectra Metadata Plot as is. Click 'Export Snapshot Images' to see your images.
+ms1ftFile,MS1FT File,Upload an MS1FT file. It's outputted by ProMex.exe in MSPathFinderT.
+ms1ftHandle,MS1FT File Handle Name,Enter filename of the MS1FT file. Use forward slashes. The default working directory in the PSpecteR folder.
+ms1ftHandleGo,Use MS1FT File Handle,"If the file path is real and an acceptable MS1FT file, this button will load the file into the app."
+ms1ftHandleClear,Clear MS1FT File Handle,This button will clear any loaded MS1FT files and any inputted file handles. 
+ms1ftTop,Number of Highest Abundance Samples,Takes the top n number of samples ranked high-low by abundance. 
+ms1ftBottom,Number of Lowest Abundance Samples,Takes the bottom n number of samples ranked high-low by abundance. 
+PMselectProtein,Filter by Protein,See features that map to a specific protein or set of proteins. 
+imgPMFM,ProMex Feature Map,Take a snapshot of the ProMex Feature Map as is. Click 'Export Snapshot Images' to see your images.
+PMFM,ProMex Feature Map Graphic,Visualize features from MS1FT files along with any associated proteins. A static version of this plot is exported by ProMex.exe.
+ms1ftTab,ProMex Feature Table,"See all the elution, mass, and abundance data from MS1FT."
+glAdd,Add Modification,Append user-specified modification to the list of possible modifications. The most important fields to specify are the monoisotopic weight and the modified sites.
+glCSVadd,Add CSV of Modifications,"Add modification data. User must match input database with the correct columns, and column names. Click 'Add Modification' after CSV completes uploading."
+glEXP,Export Glossary,Export entire glossary as a CSV.
+glEXPmod,Export New Modifications,Export new set of user inputted modifications. 
+GlossTab,Glossary,"View the glossary of post-translational modifications. Note that the glossary can be updated with your own CSV of modifications (title must match those of this table), or with a pop-up menu."
+glAddInterface,Add Modifications Interface,"Add a specific modification by changing the name, adding a mass, selecting amino acids that are modified, and building the molecular formula by selecting the element and adding the number of atoms. When the ""Add"" underneath Number of Atoms is clicked, that specific number of elements will be printed in the molecular formula section. When finished, click ""Add"" at the bottom of the pop-up window or exit."
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
+,,
