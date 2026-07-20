@@ -2,6 +2,8 @@
 
 Please cite: https://pubs.acs.org/doi/full/10.1021/acs.jproteome.0c00857
 
+This repository has been archived and is no longer maintained. The code is provided for historical reference and may contain unpatched or unknown vulnerabilities. It should not be used in production systems.
+
 This Docker container runs PSpecteR, a Shiny web application for tandem LC-MS proteomic data quality control and research. The container is built with a rocker shiny image for R 3.6.1 and includes PhantomJS for image exportation and mono for the R's raw file reading package (rawDiag). The app also contains interfaces to run containerized versions of the peptide database search algorithms MS-GF+ (for bottom-up proteomics) and MSPathFinderT (for top-down proteomics). 
 
 ### USAGE
